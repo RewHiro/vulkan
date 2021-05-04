@@ -32,6 +32,8 @@ namespace app
 
 		void selectPhysicalDevice();
 
+		void searchGraphicsQueueIndex();
+
 		VkInstance m_instance;
 
 		VkPhysicalDevice m_physicalDevice;
