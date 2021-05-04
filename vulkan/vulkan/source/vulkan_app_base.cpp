@@ -45,4 +45,16 @@ namespace app
 		auto result =  vkCreateInstance(&vulkanInstanceCreateInfo, nullptr, &m_instance);
 
 	}
+
+	void VulkanAppBase::selectPhysicalDevice()
+	{
+		auto devCount = 0u;
+		vkEnumeratePhysicalDevices(m_instance, &devCount, nullptr);
+		std::vector< VkPhysicalDevice > physicalDevices(devCount);
+		vkEnumeratePhysicalDevices(m_instance, &devCount, physicalDevices.data());
+
+		m_physicalDevice = physicalDevices[0];
+		vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_physicalDeviceMemoryProperties);
+		
+	}
 }

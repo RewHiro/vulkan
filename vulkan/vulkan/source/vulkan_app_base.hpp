@@ -30,8 +30,12 @@ namespace app
 
 		void initializeInstance(const char* appName);
 
+		void selectPhysicalDevice();
+
 		VkInstance m_instance;
 
+		VkPhysicalDevice m_physicalDevice;
 
+		VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
 	};
 }
