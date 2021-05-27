@@ -11,6 +11,7 @@ namespace app
 
 	void VulkanAppBase::initialize(GLFWwindow* window, const char* appName)
 	{
+		m_graphicsQueueIndex = searchGraphicsQueueIndex();
 	}
 
 	void VulkanAppBase::terminate()
@@ -21,6 +22,12 @@ namespace app
 	}
 	void VulkanAppBase::render()
 	{
+	}
+
+	void VulkanAppBase::checkResult( VkResult result )
+	{
+		if (result == VK_SUCCESS) return;
+		DebugBreak();
 	}
 
 	void VulkanAppBase::initializeInstance(const char* appName)
@@ -58,9 +65,9 @@ namespace app
 		
 	}
 
-	void VulkanAppBase::searchGraphicsQueueIndex()
+	uint32_t VulkanAppBase::searchGraphicsQueueIndex()
 	{
-		uint32_t propertyCount;
+		uint32_t propertyCount = 0;
 		vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &propertyCount, nullptr);
 		std::vector< VkQueueFamilyProperties > queueFamilyProperties(propertyCount);
 		vkGetPhysicalDeviceQueueFamilyProperties(m_physicalDevice, &propertyCount, queueFamilyProperties.data());
@@ -76,5 +83,44 @@ namespace app
 			}
 		}
 
+		return graphicsQueue;
+	}
+
+	void VulkanAppBase::createDevice()
+	{
+		const auto defaultQueuePriority = 1.0f;
+		VkDeviceQueueCreateInfo deviceQueueCreateInfo{};
+		deviceQueueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+		deviceQueueCreateInfo.queueFamilyIndex = m_graphicsQueueIndex;
+		deviceQueueCreateInfo.queueCount = 1;
+		deviceQueueCreateInfo.pQueuePriorities = &defaultQueuePriority;
+
+		std::vector<VkExtensionProperties> deviceExtensionsPropeties;
+
+		{
+			uint32_t count = 0u;
+			vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &count, nullptr);
+			deviceExtensionsPropeties.resize(count);
+			vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &count, deviceExtensionsPropeties.data());
+		}
+
+
+		std::vector<const char*> extensions;
+		for (const auto& deviceExtensionsProperty : deviceExtensionsPropeties)
+		{
+			extensions.emplace_back(deviceExtensionsProperty.extensionName);
+		}
+
+		VkDeviceCreateInfo deviceCreateInfo{};
+		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
+		deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
+		deviceCreateInfo.enabledExtensionCount = extensions.size();
+		deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
+		deviceCreateInfo.queueCreateInfoCount = 1;
+
+		auto result = vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device);
+		checkResult(result);
+
+		vkGetDeviceQueue(m_device, m_graphicsQueueIndex, 0, &m_deviceQueue);
 	}
 }

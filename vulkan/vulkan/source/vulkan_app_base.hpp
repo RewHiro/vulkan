@@ -28,16 +28,25 @@ namespace app
 
 	protected:
 
+		static void checkResult(VkResult);
+
 		void initializeInstance(const char* appName);
 
 		void selectPhysicalDevice();
 
-		void searchGraphicsQueueIndex();
+		uint32_t searchGraphicsQueueIndex();
+
+		void createDevice();
 
 		VkInstance m_instance;
 
 		VkPhysicalDevice m_physicalDevice;
-
 		VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
+
+		VkDevice m_device;
+		VkQueue m_deviceQueue;
+
+		uint32_t m_graphicsQueueIndex = 0;
+
 	};
 }
