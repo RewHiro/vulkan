@@ -11,7 +11,14 @@ namespace app
 
 	void VulkanAppBase::initialize(GLFWwindow* window, const char* appName)
 	{
+		initializeInstance(appName);
+
+		selectPhysicalDevice();
 		m_graphicsQueueIndex = searchGraphicsQueueIndex();
+
+		createDevice();
+
+		prepareCommandPool();
 	}
 
 	void VulkanAppBase::terminate()
@@ -50,6 +57,7 @@ namespace app
 		instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
 		instanceCreateInfo.pApplicationInfo = &applicationInfo;
 		auto result =  vkCreateInstance(&instanceCreateInfo, nullptr, &m_instance);
+		checkResult(result);
 
 	}
 
@@ -122,5 +130,15 @@ namespace app
 		checkResult(result);
 
 		vkGetDeviceQueue(m_device, m_graphicsQueueIndex, 0, &m_deviceQueue);
+	}
+
+	void VulkanAppBase::prepareCommandPool()
+	{
+		VkCommandPoolCreateInfo commandPoolCreateInfo{};
+		commandPoolCreateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
+		commandPoolCreateInfo.queueFamilyIndex = m_graphicsQueueIndex;
+		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+		auto result = vkCreateCommandPool(m_device, &commandPoolCreateInfo, nullptr, &m_commandPool);
+		checkResult(result);
 	}
 }

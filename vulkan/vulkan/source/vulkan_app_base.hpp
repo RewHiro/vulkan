@@ -38,15 +38,18 @@ namespace app
 
 		void createDevice();
 
-		VkInstance m_instance;
+		void prepareCommandPool();
 
-		VkPhysicalDevice m_physicalDevice;
-		VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties;
+		VkInstance m_instance = nullptr;
 
-		VkDevice m_device;
-		VkQueue m_deviceQueue;
+		VkPhysicalDevice m_physicalDevice = nullptr;
+		VkPhysicalDeviceMemoryProperties m_physicalDeviceMemoryProperties{};
 
+		VkDevice m_device = nullptr;
+		VkQueue m_deviceQueue = nullptr;
 		uint32_t m_graphicsQueueIndex = 0;
+
+		VkCommandPool m_commandPool = 0ull;
 
 	};
 }
