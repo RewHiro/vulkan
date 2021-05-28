@@ -40,6 +40,8 @@ namespace app
 
 		void prepareCommandPool();
 
+		void selectSurfaceFormat(VkFormat format);
+
 		VkInstance m_instance = nullptr;
 
 		VkPhysicalDevice m_physicalDevice = nullptr;
@@ -51,5 +53,8 @@ namespace app
 
 		VkCommandPool m_commandPool = 0ull;
 
+		VkSurfaceKHR m_surface = 0ull;
+		VkSurfaceFormatKHR m_surfaceFormat{};
+		VkSurfaceCapabilitiesKHR m_surfaceCapabilities{};
 	};
 }

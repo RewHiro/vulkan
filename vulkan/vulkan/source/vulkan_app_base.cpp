@@ -19,6 +19,12 @@ namespace app
 		createDevice();
 
 		prepareCommandPool();
+
+		glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface);
+		selectSurfaceFormat( VK_FORMAT_R8G8B8A8_UNORM );
+		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &m_surfaceCapabilities);
+		VkBool32 isSuppoort = 0u;
+		vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, m_graphicsQueueIndex, m_surface, &isSuppoort);
 	}
 
 	void VulkanAppBase::terminate()
@@ -140,5 +146,19 @@ namespace app
 		commandPoolCreateInfo.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
 		auto result = vkCreateCommandPool(m_device, &commandPoolCreateInfo, nullptr, &m_commandPool);
 		checkResult(result);
+	}
+
+	void VulkanAppBase::selectSurfaceFormat(VkFormat format)
+	{
+		uint32_t surfaceFormatCount = 0;
+		vkGetPhysicalDeviceSurfaceFormatsKHR(m_physicalDevice, m_surface, &surfaceFormatCount, nullptr);
+		std::vector<VkSurfaceFormatKHR> surfaceFormats(surfaceFormatCount);
+		vkGetPhysicalDeviceSurfaceFormatsKHR(m_physicalDevice, m_surface, &surfaceFormatCount, surfaceFormats.data());
+
+		for (const auto& surfaceFormat : surfaceFormats)
+		{
+			if (surfaceFormat.format != format)continue;
+			m_surfaceFormat = surfaceFormat;
+		}
 	}
 }
