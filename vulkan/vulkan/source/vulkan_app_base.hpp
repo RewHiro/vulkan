@@ -1,5 +1,6 @@
 #pragma once
 #define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
 #include <windows.h>
 
 #define VK_USE_PLATFORM_WIN32_KHR
@@ -42,6 +43,8 @@ namespace app
 
 		void selectSurfaceFormat(VkFormat format);
 
+		void createSwapchain(GLFWwindow* window);
+
 		VkInstance m_instance = nullptr;
 
 		VkPhysicalDevice m_physicalDevice = nullptr;
@@ -56,5 +59,8 @@ namespace app
 		VkSurfaceKHR m_surface = 0ull;
 		VkSurfaceFormatKHR m_surfaceFormat{};
 		VkSurfaceCapabilitiesKHR m_surfaceCapabilities{};
+		VkPresentModeKHR m_presentMode = VK_PRESENT_MODE_FIFO_KHR;
+		VkSwapchainKHR m_swapchain = 0ull;
+		VkExtent2D m_swapchainExtent{};
 	};
 }

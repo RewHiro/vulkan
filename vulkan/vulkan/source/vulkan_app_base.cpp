@@ -25,6 +25,8 @@ namespace app
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &m_surfaceCapabilities);
 		VkBool32 isSuppoort = 0u;
 		vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, m_graphicsQueueIndex, m_surface, &isSuppoort);
+
+		createSwapchain(window);
 	}
 
 	void VulkanAppBase::terminate()
@@ -160,5 +162,37 @@ namespace app
 			if (surfaceFormat.format != format)continue;
 			m_surfaceFormat = surfaceFormat;
 		}
+	}
+
+	void VulkanAppBase::createSwapchain(GLFWwindow* window)
+	{
+		auto imageCount = std::max(2u, m_surfaceCapabilities.minImageCount);
+		auto extent = m_surfaceCapabilities.currentExtent;
+		if (extent.width == ~0u)
+		{
+			auto width = 0;
+			auto height = 0;
+			glfwGetWindowSize(window, &width, &height);
+			extent.width = static_cast<uint32_t>(width);
+			extent.height = static_cast<uint32_t>(height);
+		}
+
+		uint32_t queueFamilyIndices[] = { m_graphicsQueueIndex };
+		VkSwapchainCreateInfoKHR swapchainCreateInfo{};
+		swapchainCreateInfo.sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR;
+		swapchainCreateInfo.surface = m_surface;
+		swapchainCreateInfo.minImageCount = imageCount;
+		swapchainCreateInfo.imageFormat = m_surfaceFormat.format;
+		swapchainCreateInfo.imageColorSpace = m_surfaceFormat.colorSpace;
+		swapchainCreateInfo.imageExtent = extent;
+		swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		swapchainCreateInfo.imageArrayLayers = 1;
+		swapchainCreateInfo.presentMode = m_presentMode;
+		swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
+		swapchainCreateInfo.clipped = VK_TRUE;
+		swapchainCreateInfo.compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR;
+		auto result = vkCreateSwapchainKHR(m_device, &swapchainCreateInfo, nullptr, &m_swapchain);
+		checkResult(result);
+		m_swapchainExtent = extent;
 	}
 }
