@@ -195,4 +195,46 @@ namespace app
 		checkResult(result);
 		m_swapchainExtent = extent;
 	}
+
+	void VulkanAppBase::createDepthBuffer()
+	{
+		VkImageCreateInfo imageCreateInfo{};
+		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+		imageCreateInfo.format = VK_FORMAT_D32_SFLOAT;
+		imageCreateInfo.extent.width = m_swapchainExtent.width;
+		imageCreateInfo.extent.height = m_swapchainExtent.height;
+		imageCreateInfo.mipLevels = 1;
+		imageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+		imageCreateInfo.arrayLayers = 1;
+		auto result = vkCreateImage(m_device, &imageCreateInfo, nullptr, &m_depthBuffer);
+		checkResult(result);
+
+		VkMemoryRequirements memoryRequirements{};
+		vkGetImageMemoryRequirements(m_device, m_depthBuffer, &memoryRequirements);
+		VkMemoryAllocateInfo memoryAllocateInfo{};
+		memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		memoryAllocateInfo.allocationSize = memoryRequirements.size;
+		memoryAllocateInfo.memoryTypeIndex = getMemoryTypeIndex(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+		vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &m_depthBufferMemory);
+		vkBindImageMemory(m_device, m_depthBuffer, m_depthBufferMemory, 0);
+	}
+
+	uint32_t VulkanAppBase::getMemoryTypeIndex(uint32_t requestBits, VkMemoryPropertyFlags requestMemoryPropertyFlags) const
+	{
+		uint32_t memoryTypeIndex = 0u;
+		for (uint32_t i = 0; i < m_physicalDeviceMemoryProperties.memoryTypeCount; ++i)
+		{
+			if (requestBits & 0b1)
+			{
+				const auto& types = m_physicalDeviceMemoryProperties.memoryTypes[i];
+				if ((types.propertyFlags & requestMemoryPropertyFlags) == requestMemoryPropertyFlags)
+				{
+					memoryTypeIndex = i;
+				}
+			}
+			requestBits >>= 1;
+		}
+		return memoryTypeIndex;
+	}
 }

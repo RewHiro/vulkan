@@ -45,6 +45,10 @@ namespace app
 
 		void createSwapchain(GLFWwindow* window);
 
+		void createDepthBuffer();
+
+		uint32_t getMemoryTypeIndex(uint32_t requestBits, VkMemoryPropertyFlags requestMemoryPropertyFlags) const;
+
 		VkInstance m_instance = nullptr;
 
 		VkPhysicalDevice m_physicalDevice = nullptr;
@@ -59,8 +63,11 @@ namespace app
 		VkSurfaceKHR m_surface = 0ull;
 		VkSurfaceFormatKHR m_surfaceFormat{};
 		VkSurfaceCapabilitiesKHR m_surfaceCapabilities{};
-		VkPresentModeKHR m_presentMode = VK_PRESENT_MODE_FIFO_KHR;
+		VkPresentModeKHR m_presentMode = VkPresentModeKHR::VK_PRESENT_MODE_FIFO_KHR;
 		VkSwapchainKHR m_swapchain = 0ull;
 		VkExtent2D m_swapchainExtent{};
+
+		VkImage m_depthBuffer = 0ull;
+		VkDeviceMemory m_depthBufferMemory = 0ull;
 	};
 }
