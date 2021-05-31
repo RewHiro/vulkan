@@ -347,4 +347,27 @@ namespace app
 		auto result = vkCreateRenderPass(m_device, &renderPassCreateInfo, nullptr, &m_renderPass);
 		checkResult(result);
 	}
+
+	void VulkanAppBase::createFramebuffer()
+	{
+		VkFramebufferCreateInfo framebufferCreateInfo{};
+		framebufferCreateInfo.sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO;
+		framebufferCreateInfo.renderPass = m_renderPass;
+		framebufferCreateInfo.width = m_swapchainExtent.width;
+		framebufferCreateInfo.height = m_swapchainExtent.height;
+		framebufferCreateInfo.layers = 1;
+		for (auto& swapchainImageView : m_swapchainImageViews)
+		{
+			std::array<VkImageView, 2>attachments;
+			framebufferCreateInfo.attachmentCount = static_cast<uint32_t>(attachments.size());
+			framebufferCreateInfo.pAttachments = attachments.data();
+			attachments[0] = swapchainImageView;
+			attachments[1] = m_depthImageView;
+
+			VkFramebuffer framebuffer;
+			auto result = vkCreateFramebuffer(m_device, &framebufferCreateInfo, nullptr, &framebuffer);
+			checkResult(result);
+			m_framebuffers.emplace_back(std::move(framebuffer));
+		}
+	}
 }

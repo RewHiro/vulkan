@@ -56,6 +56,7 @@ namespace app
 		void createDepthBufferBiews();
 
 		void createRenderPass();
+		void createFramebuffer();
 
 		//===================================================================================================
 
@@ -85,5 +86,6 @@ namespace app
 		std::vector<VkImageView> m_swapchainImageViews;
 
 		VkRenderPass m_renderPass = 0ull;
+		std::vector<VkFramebuffer> m_framebuffers;
 	};
 }
