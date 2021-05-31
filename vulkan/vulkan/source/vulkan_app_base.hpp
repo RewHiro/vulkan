@@ -55,6 +55,8 @@ namespace app
 		void createSwapchainViews();
 		void createDepthBufferBiews();
 
+		void createRenderPass();
+
 		//===================================================================================================
 
 		VkInstance m_instance = nullptr;
@@ -81,5 +83,7 @@ namespace app
 
 		std::vector<VkImage> m_swapchainImages;
 		std::vector<VkImageView> m_swapchainImageViews;
+
+		VkRenderPass m_renderPass = 0ull;
 	};
 }
