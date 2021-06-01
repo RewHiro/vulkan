@@ -54,8 +54,6 @@ namespace app
 
 	void VulkanAppBase::initializeInstance(const char* appName)
 	{
-		std::vector< const char* >extensions;
-
 		VkApplicationInfo applicationInfo{};
 		applicationInfo.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
 		applicationInfo.pApplicationName = appName;
@@ -63,11 +61,38 @@ namespace app
 		applicationInfo.applicationVersion = VK_API_VERSION_1_1;
 		applicationInfo.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
-		const char* layers[] = { "VK_LAYTER_LUNARG_standard_validation" };
+		std::vector< const char* >extensions;
+		std::vector<VkExtensionProperties> extensionProperties;
+		{
+			uint32_t count = 0;
+			vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
+			extensionProperties.resize(count);
+			vkEnumerateInstanceExtensionProperties(nullptr, &count, extensionProperties.data());
+
+			for (const auto& extensionProperty : extensionProperties)
+			{
+				extensions.push_back(extensionProperty.extensionName);
+			}
+		}
+
+		uint32_t layerCount = 0;
+		vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
+
+		std::vector<VkLayerProperties>layerProperties(layerCount);
+		vkEnumerateInstanceLayerProperties(&layerCount, layerProperties.data());
+
+		std::vector<const char*>layerNames;
+		layerNames.reserve(layerCount);
+
+		for (auto& layerProperty : layerProperties)
+		{
+			layerNames.push_back(layerProperty.layerName);
+		}
+
 		VkInstanceCreateInfo instanceCreateInfo{};
 		instanceCreateInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-		instanceCreateInfo.enabledLayerCount = 1;
-		instanceCreateInfo.ppEnabledLayerNames = layers;
+		instanceCreateInfo.enabledLayerCount = layerNames.size();
+		instanceCreateInfo.ppEnabledLayerNames = layerNames.data();
 		instanceCreateInfo.enabledExtensionCount = extensions.size();
 		instanceCreateInfo.ppEnabledExtensionNames = extensions.data();
 		instanceCreateInfo.pApplicationInfo = &applicationInfo;
