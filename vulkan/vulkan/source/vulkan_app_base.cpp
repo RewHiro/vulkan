@@ -242,10 +242,12 @@ namespace app
 	void VulkanAppBase::createDepthBuffer()
 	{
 		VkImageCreateInfo imageCreateInfo{};
+		imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
 		imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
 		imageCreateInfo.format = VK_FORMAT_D32_SFLOAT;
 		imageCreateInfo.extent.width = m_swapchainExtent.width;
 		imageCreateInfo.extent.height = m_swapchainExtent.height;
+		imageCreateInfo.extent.depth = 1;
 		imageCreateInfo.mipLevels = 1;
 		imageCreateInfo.usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
 		imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
