@@ -3,6 +3,7 @@
 #include <vector>
 #include <string>
 #include <array>
+#include <iostream>
 
 namespace app
 {
@@ -103,10 +104,12 @@ namespace app
 
 	void VulkanAppBase::selectPhysicalDevice()
 	{
-		auto devCount = 0u;
-		vkEnumeratePhysicalDevices(m_instance, &devCount, nullptr);
+		uint32_t  devCount = 0;
+		auto result = vkEnumeratePhysicalDevices(m_instance, &devCount, nullptr);
+		checkResult(result);
 		std::vector< VkPhysicalDevice > physicalDevices(devCount);
-		vkEnumeratePhysicalDevices(m_instance, &devCount, physicalDevices.data());
+		result = vkEnumeratePhysicalDevices(m_instance, &devCount, physicalDevices.data());
+		checkResult(result);
 
 		m_physicalDevice = physicalDevices[0];
 		vkGetPhysicalDeviceMemoryProperties(m_physicalDevice, &m_physicalDeviceMemoryProperties);
@@ -147,24 +150,32 @@ namespace app
 
 		{
 			uint32_t count = 0u;
-			vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &count, nullptr);
+			auto result = vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &count, nullptr);
+			checkResult(result);
 			deviceExtensionsPropeties.resize(count);
-			vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &count, deviceExtensionsPropeties.data());
+			result = vkEnumerateDeviceExtensionProperties(m_physicalDevice, nullptr, &count, deviceExtensionsPropeties.data());
+			checkResult(result);
 		}
 
 
 		std::vector<const char*> extensions;
 		for (const auto& deviceExtensionsProperty : deviceExtensionsPropeties)
 		{
-			extensions.emplace_back(deviceExtensionsProperty.extensionName);
+			extensions.push_back(deviceExtensionsProperty.extensionName);
 		}
+
+		VkPhysicalDeviceFeatures physicalDeviceFeatures{};
+		vkGetPhysicalDeviceFeatures(m_physicalDevice, &physicalDeviceFeatures);
 
 		VkDeviceCreateInfo deviceCreateInfo{};
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
-		deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
-		deviceCreateInfo.enabledExtensionCount = extensions.size();
+
+		//NOTE:ppEnabledExtensionNames‚ª‰ö‚µ‚¢
+		//deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
+		deviceCreateInfo.enabledExtensionCount = 0;
 		deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
 		deviceCreateInfo.queueCreateInfoCount = 1;
+		deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
 
 		auto result = vkCreateDevice(m_physicalDevice, &deviceCreateInfo, nullptr, &m_device);
 		checkResult(result);
