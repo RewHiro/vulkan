@@ -79,6 +79,10 @@ namespace app
 		createViews();
 
 		createRenderPass();
+
+		createFramebuffer();
+
+		prepareCommandBuffers();
 	}
 
 	void VulkanAppBase::terminate()
@@ -458,6 +462,19 @@ namespace app
 			checkResult(result);
 			m_framebuffers.emplace_back(std::move(framebuffer));
 		}
+	}
+
+	void VulkanAppBase::prepareCommandBuffers()
+	{
+		VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+		commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+		commandBufferAllocateInfo.commandPool = m_commandPool;
+		commandBufferAllocateInfo.commandBufferCount = m_swapchainImageViews.size();
+		commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+
+		m_commandBuffers.resize(commandBufferAllocateInfo.commandBufferCount);
+		auto result = vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, m_commandBuffers.data());
+		checkResult(result);
 	}
 
 	void VulkanAppBase::enableDebugReport()

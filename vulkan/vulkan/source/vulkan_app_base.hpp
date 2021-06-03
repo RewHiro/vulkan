@@ -58,6 +58,8 @@ namespace app
 		void createRenderPass();
 		void createFramebuffer();
 
+		void prepareCommandBuffers();
+
 		void enableDebugReport();
 		void disableDebugReport();
 
@@ -90,6 +92,8 @@ namespace app
 
 		VkRenderPass m_renderPass = 0ull;
 		std::vector<VkFramebuffer> m_framebuffers;
+
+		std::vector<VkCommandBuffer> m_commandBuffers;
 
 		PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugReportCallbackEXT = nullptr;
 		PFN_vkDebugReportMessageEXT m_vkDebugReportMessageEXT = nullptr;
