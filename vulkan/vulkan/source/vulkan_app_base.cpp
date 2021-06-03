@@ -3,10 +3,49 @@
 #include <vector>
 #include <string>
 #include <array>
-#include <iostream>
+#include <sstream>
 
 namespace app
 {
+
+#define GetInstanceProcAddr(FuncName) \
+	m_##FuncName = reinterpret_cast<PFN_##FuncName>(vkGetInstanceProcAddr(m_instance, #FuncName))
+
+	static VkBool32 VKAPI_CALL DebugReportCallback
+	(
+		VkDebugReportFlagsEXT flags,
+		VkDebugReportObjectTypeEXT objectTypes,
+		uint64_t object,
+		size_t location,
+		int32_t messageCode,
+		const char* pLayerPrefix,
+		const char* pMessage,
+		void* pUserData
+	)
+	{
+		VkBool32 result = VK_FALSE;
+		if (
+			flags & VK_DEBUG_REPORT_INFORMATION_BIT_EXT ||
+			flags & VK_DEBUG_REPORT_DEBUG_BIT_EXT
+			)
+		{
+			result = VK_TRUE;
+		}
+
+		std::stringstream ss;
+
+		if (pLayerPrefix)
+		{
+			ss << "[" << pLayerPrefix << "]";
+		}
+
+		ss << pMessage << std::endl;
+
+		OutputDebugStringA(ss.str().c_str());
+
+		return result;
+	}
+
 	VulkanAppBase::VulkanAppBase()
 	{
 	}
@@ -17,6 +56,11 @@ namespace app
 
 		selectPhysicalDevice();
 		m_graphicsQueueIndex = searchGraphicsQueueIndex();
+
+#ifdef _DEBUG
+		enableDebugReport();
+#endif // _DEBUG
+
 
 		createDevice();
 
@@ -39,7 +83,11 @@ namespace app
 
 	void VulkanAppBase::terminate()
 	{
+#ifdef _DEBUG
+		disableDebugReport();
+#endif // _DEBUG
 	}
+
 	void VulkanAppBase::prepare()
 	{
 	}
@@ -410,5 +458,26 @@ namespace app
 			checkResult(result);
 			m_framebuffers.emplace_back(std::move(framebuffer));
 		}
+	}
+
+	void VulkanAppBase::enableDebugReport()
+	{
+		GetInstanceProcAddr(vkCreateDebugReportCallbackEXT);
+		GetInstanceProcAddr(vkDebugReportMessageEXT);
+		GetInstanceProcAddr(vkDestroyDebugReportCallbackEXT);
+
+		VkDebugReportFlagsEXT flags = VK_DEBUG_REPORT_ERROR_BIT_EXT | VK_DEBUG_REPORT_WARNING_BIT_EXT;
+
+		VkDebugReportCallbackCreateInfoEXT debugReportCallbackCreateInfo{};
+		debugReportCallbackCreateInfo.sType = VK_STRUCTURE_TYPE_DEBUG_REPORT_CALLBACK_CREATE_INFO_EXT;
+		debugReportCallbackCreateInfo.flags = flags;
+		debugReportCallbackCreateInfo.pfnCallback = &DebugReportCallback;
+		m_vkCreateDebugReportCallbackEXT(m_instance, &debugReportCallbackCreateInfo, nullptr, &m_debugReportCallback);
+	}
+
+	void VulkanAppBase::disableDebugReport()
+	{
+		if (!m_vkDestroyDebugReportCallbackEXT)return;
+		m_vkDestroyDebugReportCallbackEXT(m_instance, m_debugReportCallback, nullptr);
 	}
 }

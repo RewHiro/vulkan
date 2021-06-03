@@ -58,6 +58,9 @@ namespace app
 		void createRenderPass();
 		void createFramebuffer();
 
+		void enableDebugReport();
+		void disableDebugReport();
+
 		//===================================================================================================
 
 		VkInstance m_instance = nullptr;
@@ -87,5 +90,10 @@ namespace app
 
 		VkRenderPass m_renderPass = 0ull;
 		std::vector<VkFramebuffer> m_framebuffers;
+
+		PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugReportCallbackEXT = nullptr;
+		PFN_vkDebugReportMessageEXT m_vkDebugReportMessageEXT = nullptr;
+		PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugReportCallbackEXT = nullptr;
+		VkDebugReportCallbackEXT m_debugReportCallback = 0ull;
 	};
 }
