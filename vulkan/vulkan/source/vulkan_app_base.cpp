@@ -161,6 +161,8 @@ namespace app
 		std::vector<const char*> extensions;
 		for (const auto& deviceExtensionsProperty : deviceExtensionsPropeties)
 		{
+			if (std::string(deviceExtensionsProperty.extensionName) == "VK_NV_acquire_winrt_display")continue;
+			if (std::string(deviceExtensionsProperty.extensionName) == "VK_EXT_buffer_device_address")continue;
 			extensions.push_back(deviceExtensionsProperty.extensionName);
 		}
 
@@ -171,6 +173,7 @@ namespace app
 		deviceCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
 
 		//NOTE:ppEnabledExtensionNamesが怪しい
+		//     拡張機能によってはVkPhysicalDeviceProperties2が必要かも？
 		//deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
 		deviceCreateInfo.enabledExtensionCount = 0;
 		deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
