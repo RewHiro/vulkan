@@ -142,8 +142,18 @@ namespace app
 	void VulkanAppBase::prepare()
 	{
 	}
+
 	void VulkanAppBase::render()
 	{
+
+		uint32_t nextImageIndex = 0;
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo{};
+		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+
+		auto& command = m_commandBuffers[nextImageIndex];
+		vkBeginCommandBuffer(command, &commandBufferBeginInfo);
+		vkEndCommandBuffer(command);
 	}
 
 	void VulkanAppBase::checkResult( VkResult result )
