@@ -89,9 +89,54 @@ namespace app
 
 	void VulkanAppBase::terminate()
 	{
+		vkDeviceWaitIdle(m_device);
+
+		vkFreeCommandBuffers(m_device, m_commandPool, m_commandBuffers.size(), m_commandBuffers.data());
+		m_commandBuffers.clear();
+		m_commandBuffers.shrink_to_fit();
+
+		vkDestroyRenderPass(m_device, m_renderPass, nullptr);
+		for (auto& frameBuffer : m_framebuffers)
+		{
+			vkDestroyFramebuffer(m_device, frameBuffer, nullptr);
+		}
+		m_framebuffers.clear();
+		m_framebuffers.shrink_to_fit();
+
+		vkFreeMemory(m_device, m_depthBufferMemory, nullptr);
+		vkDestroyImage(m_device, m_depthImage, nullptr);
+		vkDestroyImageView(m_device, m_depthImageView, nullptr);
+
+		for (auto& swapChainImageView : m_swapchainImageViews)
+		{
+			vkDestroyImageView(m_device, swapChainImageView, nullptr);
+		}
+		m_swapchainImageViews.clear();
+		m_swapchainImageViews.shrink_to_fit();
+
+		vkDestroySwapchainKHR(m_device, m_swapchain, nullptr);
+
+		for (auto& fence : m_fences)
+		{
+			vkDestroyFence(m_device, fence, nullptr);
+		}
+		m_fences.clear();
+		m_fences.shrink_to_fit();
+
+		vkDestroySemaphore(m_device, m_presentCompletedSemaphore, nullptr);
+		vkDestroySemaphore(m_device, m_renderCompletedSemaphore, nullptr);
+
+		vkDestroyCommandPool(m_device, m_commandPool, nullptr);
+
+		vkDestroySurfaceKHR(m_instance, m_surface, nullptr);
+
+		vkDestroyDevice(m_device, nullptr);
+
 #ifdef _DEBUG
 		disableDebugReport();
 #endif // _DEBUG
+
+		vkDestroyInstance(m_instance, nullptr);
 	}
 
 	void VulkanAppBase::prepare()
