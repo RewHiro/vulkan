@@ -60,6 +60,7 @@ namespace app
 
 		void prepareCommandBuffers();
 		void prepareFences();
+		void prepareSemaphores();
 
 		void enableDebugReport();
 		void disableDebugReport();
@@ -96,6 +97,9 @@ namespace app
 
 		std::vector<VkCommandBuffer> m_commandBuffers;
 		std::vector<VkFence> m_fences;
+
+		VkSemaphore m_renderCompletedSemaphore = 0ull;
+		VkSemaphore m_presentCompletedSemaphore = 0ull;
 
 		PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugReportCallbackEXT = nullptr;
 		PFN_vkDebugReportMessageEXT m_vkDebugReportMessageEXT = nullptr;

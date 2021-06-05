@@ -84,6 +84,7 @@ namespace app
 
 		prepareCommandBuffers();
 		prepareFences();
+		prepareSemaphores();
 	}
 
 	void VulkanAppBase::terminate()
@@ -489,6 +490,14 @@ namespace app
 			auto result = vkCreateFence(m_device, &fenceCreateInfo, nullptr, &fence);
 			checkResult(result);
 		}
+	}
+
+	void VulkanAppBase::prepareSemaphores()
+	{
+		VkSemaphoreCreateInfo semaphoreCreateInfo{};
+		semaphoreCreateInfo.sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO;
+		vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &m_renderCompletedSemaphore);
+		vkCreateSemaphore(m_device, &semaphoreCreateInfo, nullptr, &m_presentCompletedSemaphore);
 	}
 
 	void VulkanAppBase::enableDebugReport()
