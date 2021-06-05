@@ -59,6 +59,7 @@ namespace app
 		void createFramebuffer();
 
 		void prepareCommandBuffers();
+		void prepareFences();
 
 		void enableDebugReport();
 		void disableDebugReport();
@@ -94,6 +95,7 @@ namespace app
 		std::vector<VkFramebuffer> m_framebuffers;
 
 		std::vector<VkCommandBuffer> m_commandBuffers;
+		std::vector<VkFence> m_fences;
 
 		PFN_vkCreateDebugReportCallbackEXT m_vkCreateDebugReportCallbackEXT = nullptr;
 		PFN_vkDebugReportMessageEXT m_vkDebugReportMessageEXT = nullptr;

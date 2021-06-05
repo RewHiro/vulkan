@@ -83,6 +83,7 @@ namespace app
 		createFramebuffer();
 
 		prepareCommandBuffers();
+		prepareFences();
 	}
 
 	void VulkanAppBase::terminate()
@@ -475,6 +476,19 @@ namespace app
 		m_commandBuffers.resize(commandBufferAllocateInfo.commandBufferCount);
 		auto result = vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, m_commandBuffers.data());
 		checkResult(result);
+	}
+
+	void VulkanAppBase::prepareFences()
+	{
+		m_fences.resize(m_swapchainImageViews.size());
+		VkFenceCreateInfo fenceCreateInfo{};
+		fenceCreateInfo.sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO;
+		fenceCreateInfo.flags = VK_FENCE_CREATE_SIGNALED_BIT;
+		for (auto& fence : m_fences)
+		{
+			auto result = vkCreateFence(m_device, &fenceCreateInfo, nullptr, &fence);
+			checkResult(result);
+		}
 	}
 
 	void VulkanAppBase::enableDebugReport()
