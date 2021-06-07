@@ -67,7 +67,7 @@ namespace app
 		prepareCommandPool();
 
 		glfwCreateWindowSurface(m_instance, window, nullptr, &m_surface);
-		selectSurfaceFormat( VK_FORMAT_R8G8B8A8_UNORM );
+		selectSurfaceFormat( VK_FORMAT_B8G8R8A8_UNORM );
 		vkGetPhysicalDeviceSurfaceCapabilitiesKHR(m_physicalDevice, m_surface, &m_surfaceCapabilities);
 		VkBool32 isSuppoort = 0u;
 		vkGetPhysicalDeviceSurfaceSupportKHR(m_physicalDevice, m_graphicsQueueIndex, m_surface, &isSuppoort);
@@ -148,11 +148,29 @@ namespace app
 
 		uint32_t nextImageIndex = 0;
 
+		std::array<VkClearValue, 2> clearValue =
+		{ {
+			{0.5f, 0.25f,0.25f,0.0f},
+			{1.0f, 0}
+		} };
+
+		VkRenderPassBeginInfo renderPassBeginInfo{};
+		renderPassBeginInfo.sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO;
+		renderPassBeginInfo.renderPass = m_renderPass;
+		renderPassBeginInfo.framebuffer = m_framebuffers[nextImageIndex];
+		renderPassBeginInfo.renderArea.offset = VkOffset2D{ 0,0 };
+		renderPassBeginInfo.renderArea.extent = m_swapchainExtent;
+		renderPassBeginInfo.pClearValues = clearValue.data();
+		renderPassBeginInfo.clearValueCount = clearValue.size();
+
 		VkCommandBufferBeginInfo commandBufferBeginInfo{};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
 		auto& command = m_commandBuffers[nextImageIndex];
 		vkBeginCommandBuffer(command, &commandBufferBeginInfo);
+		vkCmdBeginRenderPass(command, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+
+		vkCmdEndRenderPass(command);
 		vkEndCommandBuffer(command);
 	}
 
@@ -268,12 +286,16 @@ namespace app
 
 
 		std::vector<const char*> extensions;
-		for (const auto& deviceExtensionsProperty : deviceExtensionsPropeties)
-		{
-			if (std::string(deviceExtensionsProperty.extensionName) == "VK_NV_acquire_winrt_display")continue;
-			if (std::string(deviceExtensionsProperty.extensionName) == "VK_EXT_buffer_device_address")continue;
-			extensions.push_back(deviceExtensionsProperty.extensionName);
-		}
+
+		//NOTE:これないとswapchainの生成ができない
+		extensions.emplace_back("VK_KHR_swapchain");
+
+		//for (const auto& deviceExtensionsProperty : deviceExtensionsPropeties)
+		//{
+		//	if (std::string(deviceExtensionsProperty.extensionName) == "VK_NV_acquire_winrt_display")continue;
+		//	if (std::string(deviceExtensionsProperty.extensionName) == "VK_EXT_buffer_device_address")continue;
+		//	extensions.push_back(deviceExtensionsProperty.extensionName);
+		//}
 
 		VkPhysicalDeviceFeatures physicalDeviceFeatures{};
 		vkGetPhysicalDeviceFeatures(m_physicalDevice, &physicalDeviceFeatures);
@@ -283,8 +305,8 @@ namespace app
 
 		//NOTE:ppEnabledExtensionNamesが怪しい
 		//     拡張機能によってはVkPhysicalDeviceProperties2が必要かも？
-		//deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
-		deviceCreateInfo.enabledExtensionCount = 0;
+		deviceCreateInfo.ppEnabledExtensionNames = extensions.data();
+		deviceCreateInfo.enabledExtensionCount = extensions.size();
 		deviceCreateInfo.pQueueCreateInfos = &deviceQueueCreateInfo;
 		deviceCreateInfo.queueCreateInfoCount = 1;
 		deviceCreateInfo.pEnabledFeatures = &physicalDeviceFeatures;
@@ -341,7 +363,9 @@ namespace app
 		swapchainCreateInfo.imageColorSpace = m_surfaceFormat.colorSpace;
 		swapchainCreateInfo.imageExtent = extent;
 		swapchainCreateInfo.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
+		swapchainCreateInfo.preTransform = m_surfaceCapabilities.currentTransform;
 		swapchainCreateInfo.imageArrayLayers = 1;
+		swapchainCreateInfo.imageSharingMode = VK_SHARING_MODE_EXCLUSIVE;
 		swapchainCreateInfo.presentMode = m_presentMode;
 		swapchainCreateInfo.oldSwapchain = VK_NULL_HANDLE;
 		swapchainCreateInfo.clipped = VK_TRUE;
@@ -398,14 +422,17 @@ namespace app
 	void VulkanAppBase::createViews()
 	{
 		createSwapchainViews();
+		createDepthBufferBiews();
 	}
 
 	void VulkanAppBase::createSwapchainViews()
 	{
-		uint32_t imageCount = 0u;
-		vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, nullptr);
+		uint32_t imageCount = 0;
+		auto result = vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, nullptr);
+		checkResult(result);
 		m_swapchainImages.resize(imageCount);
-		vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, m_swapchainImages.data());
+		result = vkGetSwapchainImagesKHR(m_device, m_swapchain, &imageCount, m_swapchainImages.data());
+		checkResult(result);
 		m_swapchainImageViews.resize(imageCount);
 		for (auto i = 0u; i < imageCount; ++i)
 		{
