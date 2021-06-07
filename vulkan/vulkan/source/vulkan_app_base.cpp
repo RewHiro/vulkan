@@ -147,6 +147,7 @@ namespace app
 	{
 
 		uint32_t nextImageIndex = 0;
+		vkAcquireNextImageKHR(m_device, m_swapchain, UINT64_MAX, m_presentCompletedSemaphore, VK_NULL_HANDLE, &nextImageIndex);
 
 		auto fence = m_fences[nextImageIndex];
 		vkWaitForFences(m_device, 1, &fence, VK_TRUE, UINT64_MAX);
@@ -173,6 +174,7 @@ namespace app
 		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+
 		vkCmdEndRenderPass(commandBuffer);
 		vkEndCommandBuffer(commandBuffer);
 
@@ -188,6 +190,15 @@ namespace app
 		submitInfo.pSignalSemaphores = &m_renderCompletedSemaphore;
 		vkResetFences(m_device, 1, &fence);
 		vkQueueSubmit(m_deviceQueue, 1, &submitInfo, fence);
+
+		VkPresentInfoKHR presentInfo{};
+		presentInfo.sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR;
+		presentInfo.swapchainCount = 1;
+		presentInfo.pSwapchains = &m_swapchain;
+		presentInfo.pImageIndices = &nextImageIndex;
+		presentInfo.waitSemaphoreCount = 1;
+		presentInfo.pWaitSemaphores = &m_renderCompletedSemaphore;
+		vkQueuePresentKHR(m_deviceQueue, &presentInfo);
 	}
 
 	void VulkanAppBase::checkResult( VkResult result )
