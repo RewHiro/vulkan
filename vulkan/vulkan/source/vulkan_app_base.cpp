@@ -148,6 +148,9 @@ namespace app
 
 		uint32_t nextImageIndex = 0;
 
+		auto fence = m_fences[nextImageIndex];
+		vkWaitForFences(m_device, 1, &fence, VK_TRUE, UINT64_MAX);
+
 		std::array<VkClearValue, 2> clearValue =
 		{ {
 			{0.5f, 0.25f,0.25f,0.0f},
@@ -166,12 +169,25 @@ namespace app
 		VkCommandBufferBeginInfo commandBufferBeginInfo{};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 
-		auto& command = m_commandBuffers[nextImageIndex];
-		vkBeginCommandBuffer(command, &commandBufferBeginInfo);
-		vkCmdBeginRenderPass(command, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
+		auto& commandBuffer = m_commandBuffers[nextImageIndex];
+		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
-		vkCmdEndRenderPass(command);
-		vkEndCommandBuffer(command);
+		vkCmdEndRenderPass(commandBuffer);
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		VkPipelineStageFlags waitStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT;
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		submitInfo.pWaitDstStageMask = &waitStageMask;
+		submitInfo.waitSemaphoreCount = 1;
+		submitInfo.pWaitSemaphores = &m_presentCompletedSemaphore;
+		submitInfo.signalSemaphoreCount = 1;
+		submitInfo.pSignalSemaphores = &m_renderCompletedSemaphore;
+		vkResetFences(m_device, 1, &fence);
+		vkQueueSubmit(m_deviceQueue, 1, &submitInfo, fence);
 	}
 
 	void VulkanAppBase::checkResult( VkResult result )
