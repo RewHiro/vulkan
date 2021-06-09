@@ -146,9 +146,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="source\main.cpp" />
+    <ClCompile Include="source\test.cpp" />
     <ClCompile Include="source\vulkan_app_base.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\test.hpp" />
     <ClInclude Include="source\vulkan_app_base.hpp" />
   </ItemGroup>
   <ItemGroup>
