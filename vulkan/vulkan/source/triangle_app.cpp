@@ -98,6 +98,10 @@ namespace app
 		pipelineViewportStateCreateInfo.pViewports = &viewport;
 		pipelineViewportStateCreateInfo.scissorCount = 1;
 		pipelineViewportStateCreateInfo.pScissors = &scissor;
+
+		VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
+		pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
+		pipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
 	}
 
 	TriangleApp::BufferObject TriangleApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags) const
