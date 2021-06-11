@@ -40,6 +40,26 @@ namespace app
 		}
 
 		m_indexCount = indices.size();
+
+		VkVertexInputBindingDescription vertexInputBindingDescription
+		{
+			0,
+			sizeof(Vertex),
+			VK_VERTEX_INPUT_RATE_VERTEX
+		};
+
+		std::array<VkVertexInputAttributeDescription, 2> vertexInputAttributeDescription
+		{
+			VkVertexInputAttributeDescription{0,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,position)},
+			VkVertexInputAttributeDescription{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(Vertex,color)}
+		};
+
+		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo{};
+		pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
+		pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
+		pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = vertexInputAttributeDescription.size();
+		pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescription.data();
 	}
 
 	TriangleApp::BufferObject TriangleApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags) const
