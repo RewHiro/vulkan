@@ -113,6 +113,13 @@ namespace app
 		VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo{};
 		pipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
 		pipelineMultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+		VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo{};
+		pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+		pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+		pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
 	}
 
 	TriangleApp::BufferObject TriangleApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags) const
