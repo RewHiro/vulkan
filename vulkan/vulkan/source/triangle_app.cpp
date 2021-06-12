@@ -1,5 +1,6 @@
 #include "triangle_app.hpp"
 #include <array>
+#include <fstream>
 
 namespace app
 {
@@ -146,6 +147,36 @@ namespace app
 		vkBindBufferMemory(m_device, bufferObject.buffer, bufferObject.deviceMemory, 0);
 
 		return bufferObject;
+	}
+
+	VkPipelineShaderStageCreateInfo TriangleApp::loadShaderModule(const std::string& fileName, VkShaderStageFlagBits stage)
+	{
+		std::ifstream infile(fileName, std::ios::binary);
+
+		if (!infile)
+		{
+			OutputDebugStringA("file not found.\n");
+			DebugBreak();
+		}
+
+		std::vector<char>filedata;
+		filedata.resize(infile.seekg(0, std::ifstream::end).tellg());
+		infile.seekg(0, std::ifstream::beg).read(filedata.data(), filedata.size());
+
+		VkShaderModule shaderModule = 0ull;
+		VkShaderModuleCreateInfo shaderModuleCreateInfo{};
+		shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		shaderModuleCreateInfo.pCode = reinterpret_cast<uint32_t*>(filedata.data());
+		shaderModuleCreateInfo.codeSize = filedata.size();
+		vkCreateShaderModule(m_device, &shaderModuleCreateInfo, nullptr, &shaderModule);
+
+		VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo{};
+		pipelineShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		pipelineShaderStageCreateInfo.stage = stage;
+		pipelineShaderStageCreateInfo.module = shaderModule;
+		pipelineShaderStageCreateInfo.pName = "main";
+
+		return pipelineShaderStageCreateInfo;
 	}
 }
 

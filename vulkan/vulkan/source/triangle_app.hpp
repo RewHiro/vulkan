@@ -2,6 +2,8 @@
 #include "vulkan_app_base.hpp"
 #include "glm/glm.hpp"
 
+#include <string>
+
 namespace app
 {
 	class TriangleApp : public VulkanAppBase
@@ -28,6 +30,7 @@ namespace app
 	private:
 
 		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags) const;
+		VkPipelineShaderStageCreateInfo loadShaderModule(const std::string& fileName, VkShaderStageFlagBits stage);
 
 		BufferObject m_vertexBuffer{};
 		BufferObject m_indexBuffer{};
