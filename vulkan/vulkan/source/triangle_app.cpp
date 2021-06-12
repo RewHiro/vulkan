@@ -170,7 +170,7 @@ namespace app
 		}
 
 		std::vector<char>filedata;
-		filedata.resize(infile.seekg(0, std::ifstream::end).tellg());
+		filedata.resize(static_cast<uint32_t>(infile.seekg(0, std::ifstream::end).tellg()));
 		infile.seekg(0, std::ifstream::beg).read(filedata.data(), filedata.size());
 
 		VkShaderModule shaderModule = 0ull;
