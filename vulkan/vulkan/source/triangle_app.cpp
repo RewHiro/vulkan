@@ -127,6 +127,10 @@ namespace app
 			loadShaderModule("shader.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
 			loadShaderModule("shader.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
 		};
+
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		vkCreatePipelineLayout(m_device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 	}
 
 	TriangleApp::BufferObject TriangleApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags) const
