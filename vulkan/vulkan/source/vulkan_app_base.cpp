@@ -91,6 +91,8 @@ namespace app
 	{
 		vkDeviceWaitIdle(m_device);
 
+		cleanup();
+
 		vkFreeCommandBuffers(m_device, m_commandPool, m_commandBuffers.size(), m_commandBuffers.data());
 		m_commandBuffers.clear();
 		m_commandBuffers.shrink_to_fit();
@@ -139,10 +141,6 @@ namespace app
 		vkDestroyInstance(m_instance, nullptr);
 	}
 
-	void VulkanAppBase::prepare()
-	{
-	}
-
 	void VulkanAppBase::render()
 	{
 
@@ -174,6 +172,8 @@ namespace app
 		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
 		vkCmdBeginRenderPass(commandBuffer, &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
+		m_imageIndex = nextImageIndex;
+		makeCommand(commandBuffer);
 
 		vkCmdEndRenderPass(commandBuffer);
 		vkEndCommandBuffer(commandBuffer);

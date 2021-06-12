@@ -1,4 +1,4 @@
-#include "vulkan_app_base.hpp"
+#include "triangle_app.hpp"
 
 constexpr auto WINDOW_WIDTH = 640;
 constexpr auto WINDOW_HEIGHT = 480;
@@ -11,7 +11,7 @@ int main()
 	glfwWindowHint(GLFW_RESIZABLE, 0);
 	auto window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, APP_TITLE, nullptr, nullptr);
 
-	app::VulkanAppBase vulkanAppBase;
+	app::TriangleApp vulkanAppBase;
 	vulkanAppBase.initialize(window, APP_TITLE);
 
 	while (glfwWindowShouldClose(window) == GLFW_FALSE)

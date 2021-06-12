@@ -153,6 +153,28 @@ namespace app
 		}
 	}
 
+	void TriangleApp::cleanup()
+	{
+		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+		vkDestroyPipeline(m_device, m_pipeline, nullptr);
+
+		vkFreeMemory(m_device, m_vertexBuffer.deviceMemory, nullptr);
+		vkFreeMemory(m_device, m_indexBuffer.deviceMemory, nullptr);
+		vkDestroyBuffer(m_device, m_vertexBuffer.buffer, nullptr);
+		vkDestroyBuffer(m_device, m_indexBuffer.buffer, nullptr);
+	}
+
+	void TriangleApp::makeCommand(VkCommandBuffer command)
+	{
+		vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+
+		VkDeviceSize offset = 0;
+		vkCmdBindVertexBuffers(command, 0, 1, &m_vertexBuffer.buffer, &offset);
+		vkCmdBindIndexBuffer(command, m_indexBuffer.buffer, offset, VK_INDEX_TYPE_UINT32);
+
+		vkCmdDrawIndexed(command, m_indexCount, 1, 0, 0, 0);
+	}
+
 	TriangleApp::BufferObject TriangleApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags) const
 	{
 		BufferObject bufferObject{};

@@ -26,7 +26,10 @@ namespace app
 		void initialize(GLFWwindow* window, const char* appName);
 		void terminate();
 
-		virtual void prepare();
+		virtual void prepare() {}
+		virtual void cleanup() {}
+		virtual void makeCommand(VkCommandBuffer command) {}
+
 		virtual void render();
 
 	protected:
@@ -105,5 +108,7 @@ namespace app
 		PFN_vkDebugReportMessageEXT m_vkDebugReportMessageEXT = nullptr;
 		PFN_vkDestroyDebugReportCallbackEXT m_vkDestroyDebugReportCallbackEXT = nullptr;
 		VkDebugReportCallbackEXT m_debugReportCallback = 0ull;
+
+		uint32_t m_imageIndex = 0;
 	};
 }

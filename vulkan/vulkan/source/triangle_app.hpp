@@ -26,6 +26,8 @@ namespace app
 			VulkanAppBase(){}
 
 		virtual void prepare() override;
+		virtual void cleanup() override;
+		virtual void makeCommand(VkCommandBuffer command) override;
 
 	private:
 
