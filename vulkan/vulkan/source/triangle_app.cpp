@@ -121,6 +121,12 @@ namespace app
 		pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
 		pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
 		pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+
+		std::vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos
+		{
+			loadShaderModule("shader.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
+			loadShaderModule("shader.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
+		};
 	}
 
 	TriangleApp::BufferObject TriangleApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags) const
