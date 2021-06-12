@@ -38,6 +38,6 @@ namespace app
 		uint32_t m_indexCount = 0;
 
 		VkPipelineLayout m_pipelineLayout = 0ull;
-
+		VkPipeline m_pipeline = 0ull;
 	};
 }
