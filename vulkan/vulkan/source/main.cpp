@@ -23,4 +23,5 @@ int main()
 	vulkanAppBase.terminate();
 	glfwTerminate();
 
+	return 0;
 }

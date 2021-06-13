@@ -85,6 +85,8 @@ namespace app
 		prepareCommandBuffers();
 		prepareFences();
 		prepareSemaphores();
+
+		prepare();
 	}
 
 	void VulkanAppBase::terminate()
