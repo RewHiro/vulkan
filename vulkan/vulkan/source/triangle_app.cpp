@@ -124,8 +124,8 @@ namespace app
 
 		std::vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos
 		{
-			loadShaderModule("shader.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
-			loadShaderModule("shader.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
+			loadShaderModule("source/triangle.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
+			loadShaderModule("source/triangle.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
 		};
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
@@ -203,10 +203,11 @@ namespace app
 
 	VkPipelineShaderStageCreateInfo TriangleApp::loadShaderModule(const std::string& fileName, VkShaderStageFlagBits stage)
 	{
-		std::ifstream infile(fileName, std::ios::binary);
+		std::ifstream infile( fileName, std::ios::binary);
 
 		if (!infile)
 		{
+			OutputDebugStringA(fileName.data());
 			OutputDebugStringA("file not found.\n");
 			DebugBreak();
 		}
