@@ -497,7 +497,7 @@ namespace app
 		};
 
 		imageViewCreateInfo.subresourceRange = {
-			VK_IMAGE_ASPECT_DEPTH_BIT | VK_IMAGE_ASPECT_STENCIL_BIT,
+			VK_IMAGE_ASPECT_DEPTH_BIT,
 			0,1,0,1
 		};
 

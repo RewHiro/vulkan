@@ -8,14 +8,14 @@ namespace app
 	{
 
 		constexpr glm::vec3 red(1.0f, 0.0f, 0.0f);
-		constexpr glm::vec3 green(1.0f, 0.0f, 0.0f);
-		constexpr glm::vec3 blue(1.0f, 0.0f, 0.0f);
+		constexpr glm::vec3 green(0.0f, 1.0f, 0.0f);
+		constexpr glm::vec3 blue(0.0f, 0.0f, 1.0f);
 
 		std::array<Vertex, 3> vertices =
 		{
 			Vertex{ glm::vec3(-1.0f,0.0f,0.0f),red },
-			Vertex{ glm::vec3(+1.0f,0.0f,0.0f),green },
-			Vertex{ glm::vec3(0.0f,1.0f,0.0f),blue }
+			Vertex{ glm::vec3(+1.0f,0.0f,0.0f),blue },
+			Vertex{ glm::vec3(0.0f,1.0f,0.0f),green }
 		};
 
 		std::array<uint32_t, 3>indices =
@@ -23,8 +23,8 @@ namespace app
 			0,1,2
 		};
 
-		m_vertexBuffer = createBuffer(sizeof(vertices.data()), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
-		m_indexBuffer = createBuffer(sizeof(indices.data()), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+		m_vertexBuffer = createBuffer(sizeof(vertices), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		m_indexBuffer = createBuffer(sizeof(indices), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
 
 		{
 			void* data = nullptr;
