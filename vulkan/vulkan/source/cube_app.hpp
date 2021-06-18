@@ -30,5 +30,9 @@ namespace app
 		void makeCubeGeometry();
 
 		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) const;
+
+		BufferObject m_vertexBuffer{};
+		BufferObject m_indexBuffer{};
+		uint32_t m_indexCount = 0;
 	};
 }

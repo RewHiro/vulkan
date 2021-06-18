@@ -81,6 +81,25 @@ namespace app
 			20,22,21, 21,22,23 //bottom
 		};
 
+		m_vertexBuffer = createBuffer(sizeof(vertices), VK_BUFFER_USAGE_VERTEX_BUFFER_BIT);
+		m_indexBuffer = createBuffer(sizeof(indices), VK_BUFFER_USAGE_INDEX_BUFFER_BIT);
+
+		{
+			void* data = nullptr;
+			vkMapMemory(m_device, m_vertexBuffer.deviceMemory, 0, VK_WHOLE_SIZE, 0, &data);
+			memcpy(data, vertices.data(), sizeof(vertices));
+			vkUnmapMemory(m_device, m_vertexBuffer.deviceMemory);
+		}
+
+		{
+			void* data = nullptr;
+			vkMapMemory(m_device, m_indexBuffer.deviceMemory, 0, VK_WHOLE_SIZE, 0, &data);
+			memcpy(data, indices.data(), sizeof(indices));
+			vkUnmapMemory(m_device, m_indexBuffer.deviceMemory);
+		}
+
+		m_indexCount = indices.size();
+
 	}
 
 	CubeApp::BufferObject CubeApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags) const
