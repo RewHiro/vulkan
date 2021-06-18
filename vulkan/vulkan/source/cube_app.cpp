@@ -83,5 +83,30 @@ namespace app
 
 	}
 
+	CubeApp::BufferObject CubeApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags) const
+	{
+		BufferObject bufferObject{};
+
+		VkBufferCreateInfo bufferCreateInfo{};
+		bufferCreateInfo.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+		bufferCreateInfo.usage = bufferUsageFlags;
+		bufferCreateInfo.size = size;
+		auto result = vkCreateBuffer(m_device, &bufferCreateInfo, nullptr, &bufferObject.buffer);
+		checkResult(result);
+
+		VkMemoryRequirements memoryRequirements{};
+		vkGetBufferMemoryRequirements(m_device, bufferObject.buffer, &memoryRequirements);
+
+		VkMemoryAllocateInfo memoryAllocateInfo{};
+		memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+		memoryAllocateInfo.allocationSize = memoryRequirements.size;
+		memoryAllocateInfo.memoryTypeIndex = getMemoryTypeIndex(memoryRequirements.memoryTypeBits, flags);
+		vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &bufferObject.deviceMemory);
+
+		vkBindBufferMemory(m_device, bufferObject.buffer, bufferObject.deviceMemory, 0);
+
+		return bufferObject;
+	}
+
 }
 

@@ -16,11 +16,19 @@ namespace app
 			glm::vec2 uv;
 		};
 
+		struct BufferObject
+		{
+			VkBuffer buffer;
+			VkDeviceMemory deviceMemory;
+		};
+
 		CubeApp() :VulkanAppBase() {}
 
 		virtual void prepare();
 
 	private:
 		void makeCubeGeometry();
+
+		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) const;
 	};
 }
