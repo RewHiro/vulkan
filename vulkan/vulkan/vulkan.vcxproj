@@ -145,12 +145,15 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\cube_app.cpp" />
     <ClCompile Include="source\main.cpp" />
     <ClCompile Include="source\test.cpp" />
     <ClCompile Include="source\triangle_app.cpp" />
     <ClCompile Include="source\vulkan_app_base.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="source\cube_app.hpp" />
+    <ClInclude Include="source\stb_image.h" />
     <ClInclude Include="source\test.hpp" />
     <ClInclude Include="source\triangle_app.hpp" />
     <ClInclude Include="source\vulkan_app_base.hpp" />
