@@ -6,7 +6,8 @@ namespace app
 {
 	void CubeApp::prepare()
 	{
-
+		makeCubeGeometry();
+		prepareUniformBuffers();
 	}
 
 	void CubeApp::makeCubeGeometry()
@@ -100,6 +101,16 @@ namespace app
 
 		m_indexCount = indices.size();
 
+	}
+
+	void CubeApp::prepareUniformBuffers()
+	{
+		m_uniformBuffers.resize(m_swapchainImageViews.size());
+		for (auto& uniformBuffer : m_uniformBuffers)
+		{
+			VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			uniformBuffer = createBuffer(sizeof(UniformParameters), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, flags);
+		}
 	}
 
 	CubeApp::BufferObject CubeApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags) const
