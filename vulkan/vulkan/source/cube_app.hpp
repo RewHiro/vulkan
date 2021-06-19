@@ -31,6 +31,13 @@ namespace app
 			glm::mat4 matrixProjection;
 		};
 
+		struct TextureObject
+		{
+			VkImage image;
+			VkDeviceMemory deviceMemory;
+			VkImageView imageView;
+		};
+
 		CubeApp() :VulkanAppBase() {}
 
 		virtual void prepare();
@@ -40,6 +47,7 @@ namespace app
 		void prepareUniformBuffers();
 		void prepareDescriptorSetLayout();
 		void prepareDescriptorPool();
+		void prepareDescriptorSet();
 
 		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) const;
 
@@ -51,5 +59,9 @@ namespace app
 
 		VkDescriptorSetLayout m_descriptorSetLayout = 0ull;
 		VkDescriptorPool m_descriptorPool = 0ull;
+		std::vector<VkDescriptorSet> m_descriptorSet;
+
+		TextureObject m_textureObject{};
+		VkSampler m_sampler = 0ull;
 	};
 }
