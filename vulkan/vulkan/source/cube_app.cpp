@@ -9,6 +9,7 @@ namespace app
 		makeCubeGeometry();
 		prepareUniformBuffers();
 		prepareDescriptorSetLayout();
+		prepareDescriptorPool();
 	}
 
 	void CubeApp::makeCubeGeometry()
@@ -135,6 +136,22 @@ namespace app
 		createInfo.bindingCount = bindings.size();
 		createInfo.pBindings = bindings.data();
 		vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &m_descriptorSetLayout);
+	}
+
+	void CubeApp::prepareDescriptorPool()
+	{
+		std::array<VkDescriptorPoolSize, 2> descriptorPoolSize;
+		descriptorPoolSize[0].descriptorCount = m_swapchainImageViews.size();
+		descriptorPoolSize[0].type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		descriptorPoolSize[1].descriptorCount = m_swapchainImageViews.size();
+		descriptorPoolSize[1].type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+
+		VkDescriptorPoolCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
+		createInfo.maxSets = m_swapchainImageViews.size();
+		createInfo.poolSizeCount = descriptorPoolSize.size();
+		createInfo.pPoolSizes = descriptorPoolSize.data();
+		vkCreateDescriptorPool(m_device, &createInfo, nullptr, &m_descriptorPool);
 	}
 
 	CubeApp::BufferObject CubeApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags) const
