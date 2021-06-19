@@ -38,6 +38,7 @@ namespace app
 	private:
 		void makeCubeGeometry();
 		void prepareUniformBuffers();
+		void prepareDescriptorSetLayout();
 
 		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) const;
 
@@ -46,5 +47,7 @@ namespace app
 		uint32_t m_indexCount = 0;
 
 		std::vector<BufferObject>m_uniformBuffers;
+
+		VkDescriptorSetLayout m_descriptorSetLayout = 0ull;
 	};
 }

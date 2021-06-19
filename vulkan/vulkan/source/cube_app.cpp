@@ -8,6 +8,7 @@ namespace app
 	{
 		makeCubeGeometry();
 		prepareUniformBuffers();
+		prepareDescriptorSetLayout();
 	}
 
 	void CubeApp::makeCubeGeometry()
@@ -111,6 +112,29 @@ namespace app
 			VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
 			uniformBuffer = createBuffer(sizeof(UniformParameters), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, flags);
 		}
+	}
+
+	void CubeApp::prepareDescriptorSetLayout()
+	{
+		std::vector<VkDescriptorSetLayoutBinding>bindings;
+		VkDescriptorSetLayoutBinding bindingUniformBuffer{}, bindingTexture{};
+		bindingUniformBuffer.binding = 0;
+		bindingUniformBuffer.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+		bindingUniformBuffer.stageFlags = VK_SHADER_STAGE_VERTEX_BIT;
+		bindingUniformBuffer.descriptorCount = 1;
+		bindings.emplace_back(std::move(bindingUniformBuffer));
+
+		bindingTexture.binding = 1;
+		bindingTexture.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+		bindingTexture.stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT;
+		bindingTexture.descriptorCount = 1;
+		bindings.emplace_back(std::move(bindingTexture));
+
+		VkDescriptorSetLayoutCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO;
+		createInfo.bindingCount = bindings.size();
+		createInfo.pBindings = bindings.data();
+		vkCreateDescriptorSetLayout(m_device, &createInfo, nullptr, &m_descriptorSetLayout);
 	}
 
 	CubeApp::BufferObject CubeApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags) const
