@@ -243,7 +243,7 @@ namespace app
 		TextureObject textureObject{};
 
 		int width = 0, height = 0, channels = 0;
-		const auto* const image = stbi_load(fileName.data(), &width, &height, &channels, 0);
+		auto* const image = stbi_load(fileName.data(), &width, &height, &channels, 0);
 		auto format = VK_FORMAT_R8G8B8A8_UNORM;
 
 		{
@@ -293,11 +293,47 @@ namespace app
 		VkCommandBufferBeginInfo commandBufferBeginInfo{};
 		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
 		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+		setImageMemoryBarrier(commandBuffer, textureObject.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.buffer, textureObject.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
 
-		return TextureObject{};
+		setImageMemoryBarrier(commandBuffer, textureObject.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		vkQueueSubmit(m_deviceQueue, 1, &submitInfo, VK_NULL_HANDLE);
+		{
+			VkImageViewCreateInfo imageViewCreateInfo{};
+			imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			imageViewCreateInfo.image = textureObject.image;
+			imageViewCreateInfo.format = format;
+			imageViewCreateInfo.components = {
+				VK_COMPONENT_SWIZZLE_R,
+				VK_COMPONENT_SWIZZLE_G,
+				VK_COMPONENT_SWIZZLE_B,
+				VK_COMPONENT_SWIZZLE_A,
+			};
+			imageViewCreateInfo.subresourceRange = {
+				VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1
+			};
+			vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &textureObject.imageView);
+		}
+
+		vkDeviceWaitIdle(m_device);
+		vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
+
+		vkFreeMemory(m_device, stagingBuffer.deviceMemory, nullptr);
+		vkDestroyBuffer(m_device, stagingBuffer.buffer, nullptr);
+
+		stbi_image_free(image);
+
+		return textureObject;
 	}
 
-	void CubeApp::setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
+	void CubeApp::setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const
 	{
 		VkImageMemoryBarrier imageMemoryBarrier{};
 		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;

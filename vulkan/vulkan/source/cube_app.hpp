@@ -54,7 +54,7 @@ namespace app
 
 		TextureObject createTextureObject(const std::string& fileName) const;
 
-		void setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
+		void setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
 		BufferObject m_vertexBuffer{};
 		BufferObject m_indexBuffer{};
