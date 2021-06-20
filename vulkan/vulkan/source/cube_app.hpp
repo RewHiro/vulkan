@@ -4,6 +4,7 @@
 #include "glm/glm.hpp"
 
 #include <vector>
+#include <string>
 
 namespace app
 {
@@ -50,6 +51,10 @@ namespace app
 		void prepareDescriptorSet();
 
 		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) const;
+
+		TextureObject createTextureObject(const std::string& fileName) const;
+
+		void setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout);
 
 		BufferObject m_vertexBuffer{};
 		BufferObject m_indexBuffer{};

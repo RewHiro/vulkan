@@ -2,6 +2,9 @@
 
 #include <array>
 
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
+
 namespace app
 {
 	void CubeApp::prepare()
@@ -232,6 +235,121 @@ namespace app
 		vkBindBufferMemory(m_device, bufferObject.buffer, bufferObject.deviceMemory, 0);
 
 		return bufferObject;
+	}
+
+	CubeApp::TextureObject CubeApp::createTextureObject(const std::string& fileName) const
+	{
+		BufferObject stagingBuffer{};
+		TextureObject textureObject{};
+
+		int width = 0, height = 0, channels = 0;
+		const auto* const image = stbi_load(fileName.data(), &width, &height, &channels, 0);
+		auto format = VK_FORMAT_R8G8B8A8_UNORM;
+
+		{
+			VkImageCreateInfo imageCreateInfo{};
+			imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+			imageCreateInfo.extent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+			imageCreateInfo.format = format;
+			imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+			imageCreateInfo.arrayLayers = 1;
+			imageCreateInfo.mipLevels = 1;
+			imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+			imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+			vkCreateImage(m_device, &imageCreateInfo, nullptr, &textureObject.image);
+
+			VkMemoryRequirements memoryRequirements{};
+			vkGetImageMemoryRequirements(m_device, textureObject.image, &memoryRequirements);
+			VkMemoryAllocateInfo memoryAllocateInfo{};
+			memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			memoryAllocateInfo.allocationSize = memoryRequirements.size;
+			memoryAllocateInfo.memoryTypeIndex = getMemoryTypeIndex(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &textureObject.deviceMemory);
+			vkBindImageMemory(m_device, textureObject.image, textureObject.deviceMemory, 0);
+		}
+
+		{
+			uint32_t imageSize = width * height * sizeof(uint32_t);
+			stagingBuffer = createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT);
+			void* data = nullptr;
+			vkMapMemory(m_device, stagingBuffer.deviceMemory, 0, VK_WHOLE_SIZE, 0, &data);
+			memcpy(data, image, imageSize);
+			vkUnmapMemory(m_device, stagingBuffer.deviceMemory);
+		}
+
+		VkBufferImageCopy copyRegion{};
+		copyRegion.imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+		copyRegion.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+		VkCommandBuffer commandBuffer = nullptr;
+		{
+			VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+			commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			commandBufferAllocateInfo.commandBufferCount = 1;
+			commandBufferAllocateInfo.commandPool = m_commandPool;
+			commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, &commandBuffer);
+		}
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo{};
+		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
+		return TextureObject{};
+	}
+
+	void CubeApp::setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout)
+	{
+		VkImageMemoryBarrier imageMemoryBarrier{};
+		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		imageMemoryBarrier.oldLayout = oldLayout;
+		imageMemoryBarrier.newLayout = newLayout;
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1 };
+		imageMemoryBarrier.image = image;
+
+		VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		VkPipelineStageFlags dstStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+
+		switch (oldLayout)
+		{
+		case VK_IMAGE_LAYOUT_UNDEFINED :
+			imageMemoryBarrier.srcAccessMask = 0;
+			break;
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			srcStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			break;
+		}
+
+		switch (newLayout)
+		{
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			dstStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			dstStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dstStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			break;
+		}
+
+		vkCmdPipelineBarrier
+		(
+			commandBuffer,
+			srcStageFlags,
+			dstStageFlags,
+			0,
+			0,
+			nullptr,
+			0,
+			nullptr,
+			1,
+			&imageMemoryBarrier
+		);
 	}
 
 }
