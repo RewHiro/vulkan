@@ -13,6 +13,8 @@ namespace app
 		prepareUniformBuffers();
 		prepareDescriptorSetLayout();
 		prepareDescriptorPool();
+
+		m_textureObject = createTextureObject("texture.tga");
 	}
 
 	void CubeApp::makeCubeGeometry()
