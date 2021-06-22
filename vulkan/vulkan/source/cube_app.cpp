@@ -15,6 +15,7 @@ namespace app
 		prepareDescriptorPool();
 
 		m_textureObject = createTextureObject("texture.tga");
+		m_sampler = createSampler();
 	}
 
 	void CubeApp::makeCubeGeometry()
@@ -333,6 +334,21 @@ namespace app
 		stbi_image_free(image);
 
 		return textureObject;
+	}
+
+	VkSampler CubeApp::createSampler() const
+	{
+		VkSampler sampler = 0ull;
+		VkSamplerCreateInfo createInfo{};
+		createInfo.sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO;
+		createInfo.minFilter = VK_FILTER_LINEAR;
+		createInfo.magFilter = VK_FILTER_LINEAR;
+		createInfo.addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		createInfo.addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT;
+		createInfo.maxAnisotropy = 1.0f;
+		createInfo.borderColor = VK_BORDER_COLOR_FLOAT_OPAQUE_WHITE;
+		vkCreateSampler(m_device, &createInfo, nullptr, &sampler);
+		return sampler;
 	}
 
 	void CubeApp::setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const
