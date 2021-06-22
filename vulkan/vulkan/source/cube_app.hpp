@@ -58,6 +58,8 @@ namespace app
 
 		void setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
+		VkPipelineShaderStageCreateInfo loadShaderModule(const std::string& fileName, VkShaderStageFlagBits stage);
+
 		BufferObject m_vertexBuffer{};
 		BufferObject m_indexBuffer{};
 		uint32_t m_indexCount = 0;
@@ -70,5 +72,8 @@ namespace app
 
 		TextureObject m_textureObject{};
 		VkSampler m_sampler = 0ull;
+
+		VkPipelineLayout m_pipelineLayout = 0ull;
+		VkPipeline m_pipeline = 0ull;
 	};
 }

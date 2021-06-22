@@ -1,6 +1,7 @@
 #include "cube_app.hpp"
 
 #include <array>
+#include <fstream>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -85,6 +86,47 @@ namespace app
 		pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
 		pipelineRasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
 		pipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
+
+		VkPipelineMultisampleStateCreateInfo pipelineMultisampleStateCreateInfo{};
+		pipelineMultisampleStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO;
+		pipelineMultisampleStateCreateInfo.rasterizationSamples = VK_SAMPLE_COUNT_1_BIT;
+
+		VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo{};
+		pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+		pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+		pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
+		pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+		pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+
+		std::vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos
+		{
+			loadShaderModule("source/cube.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
+			loadShaderModule("source/cube.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
+		};
+
+		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
+		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		vkCreatePipelineLayout(m_device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
+
+		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
+		graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
+		graphicsPipelineCreateInfo.stageCount = pipelineShaderStageCreateInfos.size();
+		graphicsPipelineCreateInfo.pStages = pipelineShaderStageCreateInfos.data();
+		graphicsPipelineCreateInfo.pInputAssemblyState = &pipelineInputAssemblyStateCreateInfo;
+		graphicsPipelineCreateInfo.pVertexInputState = &pipelineVertexInputStateCreateInfo;
+		graphicsPipelineCreateInfo.pRasterizationState = &pipelineRasterizationStateCreateInfo;
+		graphicsPipelineCreateInfo.pDepthStencilState = &pipelineDepthStencilStateCreateInfo;
+		graphicsPipelineCreateInfo.pMultisampleState = &pipelineMultisampleStateCreateInfo;
+		graphicsPipelineCreateInfo.pViewportState = &pipelineViewportStateCreateInfo;
+		graphicsPipelineCreateInfo.pColorBlendState = &pipelineColorBlendStateCreateInfo;
+		graphicsPipelineCreateInfo.renderPass = m_renderPass;
+		graphicsPipelineCreateInfo.layout = m_pipelineLayout;
+		vkCreateGraphicsPipelines(m_device, VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &m_pipeline);
+
+		for (const auto& shaderStage : pipelineShaderStageCreateInfos)
+		{
+			vkDestroyShaderModule(m_device, shaderStage.module, nullptr);
+		}
 	}
 
 	void CubeApp::makeCubeGeometry()
@@ -473,6 +515,38 @@ namespace app
 			1,
 			&imageMemoryBarrier
 		);
+	}
+
+	VkPipelineShaderStageCreateInfo CubeApp::loadShaderModule(const std::string& fileName, VkShaderStageFlagBits stage)
+	{
+		std::ifstream infile(fileName, std::ios::binary);
+
+		if (!infile)
+		{
+			OutputDebugStringA(fileName.data());
+			OutputDebugStringA("file not found.\n");
+			DebugBreak();
+		}
+
+		std::vector<char>filedata;
+		filedata.resize(static_cast<uint32_t>(infile.seekg(0, std::ifstream::end).tellg()));
+		infile.seekg(0, std::ifstream::beg).read(filedata.data(), filedata.size());
+
+		VkShaderModule shaderModule = 0ull;
+		VkShaderModuleCreateInfo shaderModuleCreateInfo{};
+		shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
+		shaderModuleCreateInfo.pCode = reinterpret_cast<uint32_t*>(filedata.data());
+		shaderModuleCreateInfo.codeSize = filedata.size();
+		vkCreateShaderModule(m_device, &shaderModuleCreateInfo, nullptr, &shaderModule);
+
+		VkPipelineShaderStageCreateInfo pipelineShaderStageCreateInfo{};
+		pipelineShaderStageCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO;
+		pipelineShaderStageCreateInfo.stage = stage;
+		pipelineShaderStageCreateInfo.module = shaderModule;
+		pipelineShaderStageCreateInfo.pName = "main";
+
+		return pipelineShaderStageCreateInfo;
+
 	}
 
 }
