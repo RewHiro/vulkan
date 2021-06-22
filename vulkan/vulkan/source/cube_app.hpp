@@ -42,6 +42,8 @@ namespace app
 		CubeApp() :VulkanAppBase() {}
 
 		virtual void prepare() override;
+		virtual void cleanup() override;
+
 
 	private:
 		void makeCubeGeometry();

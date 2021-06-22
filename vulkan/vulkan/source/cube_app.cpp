@@ -131,6 +131,31 @@ namespace app
 		}
 	}
 
+	void CubeApp::cleanup()
+	{
+		for (auto& uniformBuffer : m_uniformBuffers)
+		{
+			vkDestroyBuffer(m_device, uniformBuffer.buffer, nullptr);
+			vkFreeMemory(m_device, uniformBuffer.deviceMemory, nullptr);
+		}
+
+		vkDestroySampler(m_device, m_sampler, nullptr);
+		vkDestroyImage(m_device, m_textureObject.image, nullptr);
+		vkDestroyImageView(m_device, m_textureObject.imageView, nullptr);
+		vkFreeMemory(m_device, m_textureObject.deviceMemory, nullptr);
+
+		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+		vkDestroyPipeline(m_device, m_pipeline, nullptr);
+
+		vkFreeMemory(m_device, m_vertexBuffer.deviceMemory, nullptr);
+		vkFreeMemory(m_device, m_indexBuffer.deviceMemory, nullptr);
+		vkDestroyBuffer(m_device, m_vertexBuffer.buffer, nullptr);
+		vkDestroyBuffer(m_device, m_indexBuffer.buffer, nullptr);
+
+		vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
+		vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
+	}
+
 	void CubeApp::makeCubeGeometry()
 	{
 		using namespace glm;
