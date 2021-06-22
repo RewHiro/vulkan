@@ -56,6 +56,24 @@ namespace app
 		pipelineColorBlendStateCreateInfo.attachmentCount = 1;
 		pipelineColorBlendStateCreateInfo.pAttachments = &pipelineColorBlendAttachmentState;
 
+		VkViewport viewport
+		{
+			0.0f, static_cast<float>(m_swapchainExtent.height),
+			static_cast<float>(m_swapchainExtent.width), -1.0f * m_swapchainExtent.height,
+			0.0f,1.0f
+		};
+
+		VkRect2D scissor =
+		{
+			{0,0},
+			m_swapchainExtent
+		};
+		VkPipelineViewportStateCreateInfo pipelineViewportStateCreateInfo{};
+		pipelineViewportStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+		pipelineViewportStateCreateInfo.viewportCount = 1;
+		pipelineViewportStateCreateInfo.pViewports = &viewport;
+		pipelineViewportStateCreateInfo.scissorCount = 1;
+		pipelineViewportStateCreateInfo.pScissors = &scissor;
 	}
 
 	void CubeApp::makeCubeGeometry()
