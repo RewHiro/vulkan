@@ -36,6 +36,26 @@ namespace app
 		pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
 		pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = vertexInputAttributeDescriptions.size();
 		pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescriptions.data();
+
+		const auto colorWriteAll =
+			VK_COLOR_COMPONENT_R_BIT |
+			VK_COLOR_COMPONENT_G_BIT |
+			VK_COLOR_COMPONENT_B_BIT |
+			VK_COLOR_COMPONENT_A_BIT;
+		VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState{};
+		pipelineColorBlendAttachmentState.blendEnable = VK_TRUE;
+		pipelineColorBlendAttachmentState.srcColorBlendFactor = VK_BLEND_FACTOR_ONE;
+		pipelineColorBlendAttachmentState.dstColorBlendFactor = VK_BLEND_FACTOR_ZERO;
+		pipelineColorBlendAttachmentState.srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE;
+		pipelineColorBlendAttachmentState.dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO;
+		pipelineColorBlendAttachmentState.colorBlendOp = VK_BLEND_OP_ADD;
+		pipelineColorBlendAttachmentState.alphaBlendOp = VK_BLEND_OP_ADD;
+		pipelineColorBlendAttachmentState.colorWriteMask = colorWriteAll;
+		VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo{};
+		pipelineColorBlendStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO;
+		pipelineColorBlendStateCreateInfo.attachmentCount = 1;
+		pipelineColorBlendStateCreateInfo.pAttachments = &pipelineColorBlendAttachmentState;
+
 	}
 
 	void CubeApp::makeCubeGeometry()
