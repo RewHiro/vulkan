@@ -16,6 +16,26 @@ namespace app
 
 		m_textureObject = createTextureObject("texture.tga");
 		m_sampler = createSampler();
+
+		VkVertexInputBindingDescription vertexInputBindingDescription
+		{
+			0,
+			sizeof(CubeVertex),
+			VK_VERTEX_INPUT_RATE_VERTEX
+		};
+
+		std::array<VkVertexInputAttributeDescription, 3> vertexInputAttributeDescriptions
+		{ {
+			{0,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(CubeVertex,position)},
+			{1,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(CubeVertex,color)},
+			{2,0,VK_FORMAT_R32G32B32_SFLOAT,offsetof(CubeVertex,uv)},
+		} };
+		VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo{};
+		pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
+		pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = 1;
+		pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = &vertexInputBindingDescription;
+		pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = vertexInputAttributeDescriptions.size();
+		pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = vertexInputAttributeDescriptions.data();
 	}
 
 	void CubeApp::makeCubeGeometry()
