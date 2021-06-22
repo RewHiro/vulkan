@@ -78,6 +78,13 @@ namespace app
 		VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo{};
 		pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
 		pipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+
+		VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo{};
+		pipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
+		pipelineRasterizationStateCreateInfo.polygonMode = VK_POLYGON_MODE_FILL;
+		pipelineRasterizationStateCreateInfo.cullMode = VK_CULL_MODE_NONE;
+		pipelineRasterizationStateCreateInfo.frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE;
+		pipelineRasterizationStateCreateInfo.lineWidth = 1.0f;
 	}
 
 	void CubeApp::makeCubeGeometry()
