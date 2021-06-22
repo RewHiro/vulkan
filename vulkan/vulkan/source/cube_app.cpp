@@ -18,6 +18,8 @@ namespace app
 		m_textureObject = createTextureObject("texture.tga");
 		m_sampler = createSampler();
 
+		prepareDescriptorSet();
+
 		VkVertexInputBindingDescription vertexInputBindingDescription
 		{
 			0,
