@@ -2,6 +2,7 @@
 
 #include <array>
 #include <fstream>
+#include <glm/gtc/matrix_transform.hpp>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -15,7 +16,7 @@ namespace app
 		prepareDescriptorSetLayout();
 		prepareDescriptorPool();
 
-		m_textureObject = createTextureObject("texture.tga");
+		m_textureObject = createTextureObject("source/texture.tga");
 		m_sampler = createSampler();
 
 		prepareDescriptorSet();
@@ -108,6 +109,8 @@ namespace app
 
 		VkPipelineLayoutCreateInfo pipelineLayoutCreateInfo{};
 		pipelineLayoutCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO;
+		pipelineLayoutCreateInfo.setLayoutCount = 1;
+		pipelineLayoutCreateInfo.pSetLayouts = &m_descriptorSetLayout;
 		vkCreatePipelineLayout(m_device, &pipelineLayoutCreateInfo, nullptr, &m_pipelineLayout);
 
 		VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
@@ -154,6 +157,37 @@ namespace app
 
 		vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
 		vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
+	}
+
+	void CubeApp::makeCommand(VkCommandBuffer command)
+	{
+		ShaderParameters shaderParameters{};
+		shaderParameters.matrixWorld = glm::rotate(glm::identity<glm::mat4>(), glm::radians(45.0f), glm::vec3(0, 1, 0));
+		shaderParameters.matrixView = glm::lookAtRH(glm::vec3(0.0f, 3.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		shaderParameters.matrixProjection = glm::perspective(glm::radians(60.0f), 640.0f / 480, 0.01f, 100.0f);
+
+		{
+			auto memory = m_uniformBuffers[m_imageIndex].deviceMemory;
+			void* data = nullptr;
+			vkMapMemory(m_device, memory, 0, VK_WHOLE_SIZE, 0, &data);
+			memcpy(data, &shaderParameters, sizeof(ShaderParameters));
+			vkUnmapMemory(m_device, memory);
+		}
+
+		vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipeline);
+
+		VkDeviceSize offset = 0;
+		vkCmdBindVertexBuffers(command, 0, 1, &m_vertexBuffer.buffer, &offset);
+		vkCmdBindIndexBuffer(command, m_indexBuffer.buffer, offset, VK_INDEX_TYPE_UINT32);
+
+		std::array<VkDescriptorSet, 1> descriptorSets =
+		{
+			m_descriptorSet[m_imageIndex]
+		};
+
+		vkCmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
+
+		vkCmdDrawIndexed(command, m_indexCount, 1, 0, 0, 0);
 	}
 
 	void CubeApp::makeCubeGeometry()
@@ -378,13 +412,13 @@ namespace app
 		return bufferObject;
 	}
 
-	CubeApp::TextureObject CubeApp::createTextureObject(const std::string& fileName) const
+	CubeApp::TextureObject CubeApp::createTextureObject(std::string_view filename) const
 	{
 		BufferObject stagingBuffer{};
 		TextureObject textureObject{};
 
 		int width = 0, height = 0, channels = 0;
-		auto* const image = stbi_load(fileName.data(), &width, &height, &channels, 0);
+		auto* const image = stbi_load(filename.data(), &width, &height, &channels, 0);
 		auto format = VK_FORMAT_R8G8B8A8_UNORM;
 
 		{
@@ -544,9 +578,9 @@ namespace app
 		);
 	}
 
-	VkPipelineShaderStageCreateInfo CubeApp::loadShaderModule(const std::string& fileName, VkShaderStageFlagBits stage)
+	VkPipelineShaderStageCreateInfo CubeApp::loadShaderModule(std::string_view fileName, VkShaderStageFlagBits stage)
 	{
-		std::ifstream infile(fileName, std::ios::binary);
+		std::ifstream infile(fileName.data(), std::ios::binary);
 
 		if (!infile)
 		{

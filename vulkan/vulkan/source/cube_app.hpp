@@ -5,6 +5,7 @@
 
 #include <vector>
 #include <string>
+#include <string_view>
 
 namespace app
 {
@@ -39,11 +40,18 @@ namespace app
 			VkImageView imageView;
 		};
 
+		struct ShaderParameters
+		{
+			glm::mat4 matrixWorld;
+			glm::mat4 matrixView;
+			glm::mat4 matrixProjection;
+		};
+
 		CubeApp() :VulkanAppBase() {}
 
 		virtual void prepare() override;
 		virtual void cleanup() override;
-
+		virtual void makeCommand(VkCommandBuffer command) override;
 
 	private:
 		void makeCubeGeometry();
@@ -54,13 +62,13 @@ namespace app
 
 		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT) const;
 
-		TextureObject createTextureObject(const std::string& fileName) const;
+		TextureObject createTextureObject(std::string_view fileName) const;
 
 		VkSampler createSampler()const;
 
 		void setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
-		VkPipelineShaderStageCreateInfo loadShaderModule(const std::string& fileName, VkShaderStageFlagBits stage);
+		VkPipelineShaderStageCreateInfo loadShaderModule(std::string_view fileName, VkShaderStageFlagBits stage);
 
 		BufferObject m_vertexBuffer{};
 		BufferObject m_indexBuffer{};
