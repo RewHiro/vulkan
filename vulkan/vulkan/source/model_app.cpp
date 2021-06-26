@@ -1,6 +1,7 @@
 #include "model_app.hpp"
 
 #include "stream_reader.hpp"
+#include "stb_image.h"
 
 namespace app
 {
@@ -18,6 +19,9 @@ namespace app
 		auto glbStream = reader->GetInputStream(modelFilePath.filename().u8string());
 		auto glbResourceReader = std::make_shared<Microsoft::glTF::GLBResourceReader>(std::move(reader), std::move(glbStream));
 		auto document = Microsoft::glTF::Deserialize(glbResourceReader->GetJson());
+
+		makeModelGeometry( document, glbResourceReader);
+		makeModelMaterial(document, glbResourceReader);
 	}
 
 	void ModelApp::makeModelGeometry(const Microsoft::glTF::Document& document, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader)
@@ -80,6 +84,28 @@ namespace app
 		}
 	}
 
+	void ModelApp::makeModelMaterial(const Microsoft::glTF::Document& document, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader)
+	{
+		for (auto&& material : document.materials.Elements())
+		{
+			auto textureId = material.metallicRoughness.baseColorTexture.textureId;
+			if (textureId.empty())
+			{
+				textureId = material.normalTexture.textureId;
+			}
+
+			auto& texture = document.textures.Get(textureId);
+			auto& image = document.images.Get(texture.imageId);
+			auto imageBufferView = document.bufferViews.Get(image.bufferViewId);
+			auto imageData = reader->ReadBinaryData<char>(document, imageBufferView);
+
+			Material material{};
+			material.alphaMode = material.alphaMode;
+			material.texture = createTextureFromMemory(imageData);
+			m_model.materials.push_back(std::move(material));
+		}
+	}
+
 	ModelApp::BufferObject ModelApp::createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags, const void* initialData) const
 	{
 		BufferObject bufferObject{};
@@ -111,6 +137,159 @@ namespace app
 		}
 
 		return bufferObject;
+
+	}
+
+	ModelApp::TextureObject ModelApp::createTextureFromMemory(const std::vector<char>& imageData) const
+	{
+		BufferObject stagingBuffer{};
+		TextureObject textureObject{};
+
+		int width = 0, height = 0, channels = 0;
+		auto* const image = stbi_load_from_memory( reinterpret_cast<const uint8_t*>(imageData.data()), imageData.size(), &width, &height, &channels, 0);
+		auto format = VK_FORMAT_R8G8B8A8_UNORM;
+
+		{
+			VkImageCreateInfo imageCreateInfo{};
+			imageCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO;
+			imageCreateInfo.extent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+			imageCreateInfo.format = format;
+			imageCreateInfo.imageType = VK_IMAGE_TYPE_2D;
+			imageCreateInfo.arrayLayers = 1;
+			imageCreateInfo.mipLevels = 1;
+			imageCreateInfo.samples = VK_SAMPLE_COUNT_1_BIT;
+			imageCreateInfo.usage = VK_IMAGE_USAGE_TRANSFER_DST_BIT | VK_IMAGE_USAGE_SAMPLED_BIT;
+			vkCreateImage(m_device, &imageCreateInfo, nullptr, &textureObject.image);
+
+			VkMemoryRequirements memoryRequirements{};
+			vkGetImageMemoryRequirements(m_device, textureObject.image, &memoryRequirements);
+			VkMemoryAllocateInfo memoryAllocateInfo{};
+			memoryAllocateInfo.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+			memoryAllocateInfo.allocationSize = memoryRequirements.size;
+			memoryAllocateInfo.memoryTypeIndex = getMemoryTypeIndex(memoryRequirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+			vkAllocateMemory(m_device, &memoryAllocateInfo, nullptr, &textureObject.deviceMemory);
+			vkBindImageMemory(m_device, textureObject.image, textureObject.deviceMemory, 0);
+		}
+
+		{
+			uint32_t imageSize = width * height * sizeof(uint32_t);
+			stagingBuffer = createBuffer(imageSize, VK_BUFFER_USAGE_TRANSFER_SRC_BIT, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT, image);
+			void* data = nullptr;
+			vkMapMemory(m_device, stagingBuffer.deviceMemory, 0, VK_WHOLE_SIZE, 0, &data);
+			memcpy(data, image, imageSize);
+			vkUnmapMemory(m_device, stagingBuffer.deviceMemory);
+		}
+
+		VkBufferImageCopy copyRegion{};
+		copyRegion.imageExtent = { static_cast<uint32_t>(width), static_cast<uint32_t>(height), 1 };
+		copyRegion.imageSubresource = { VK_IMAGE_ASPECT_COLOR_BIT,0,0,1 };
+		VkCommandBuffer commandBuffer = nullptr;
+		{
+			VkCommandBufferAllocateInfo commandBufferAllocateInfo{};
+			commandBufferAllocateInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+			commandBufferAllocateInfo.commandBufferCount = 1;
+			commandBufferAllocateInfo.commandPool = m_commandPool;
+			commandBufferAllocateInfo.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+			vkAllocateCommandBuffers(m_device, &commandBufferAllocateInfo, &commandBuffer);
+		}
+
+		VkCommandBufferBeginInfo commandBufferBeginInfo{};
+		commandBufferBeginInfo.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+		vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+		setImageMemoryBarrier(commandBuffer, textureObject.image, VK_IMAGE_LAYOUT_UNDEFINED, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL);
+		vkCmdCopyBufferToImage(commandBuffer, stagingBuffer.buffer, textureObject.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &copyRegion);
+
+		setImageMemoryBarrier(commandBuffer, textureObject.image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL);
+		vkEndCommandBuffer(commandBuffer);
+
+		VkSubmitInfo submitInfo{};
+		submitInfo.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+		submitInfo.commandBufferCount = 1;
+		submitInfo.pCommandBuffers = &commandBuffer;
+		vkQueueSubmit(m_deviceQueue, 1, &submitInfo, VK_NULL_HANDLE);
+		{
+			VkImageViewCreateInfo imageViewCreateInfo{};
+			imageViewCreateInfo.sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO;
+			imageViewCreateInfo.viewType = VK_IMAGE_VIEW_TYPE_2D;
+			imageViewCreateInfo.image = textureObject.image;
+			imageViewCreateInfo.format = format;
+			imageViewCreateInfo.components = {
+				VK_COMPONENT_SWIZZLE_R,
+				VK_COMPONENT_SWIZZLE_G,
+				VK_COMPONENT_SWIZZLE_B,
+				VK_COMPONENT_SWIZZLE_A,
+			};
+			imageViewCreateInfo.subresourceRange = {
+				VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1
+			};
+			vkCreateImageView(m_device, &imageViewCreateInfo, nullptr, &textureObject.imageView);
+		}
+
+		vkDeviceWaitIdle(m_device);
+		vkFreeCommandBuffers(m_device, m_commandPool, 1, &commandBuffer);
+
+		vkFreeMemory(m_device, stagingBuffer.deviceMemory, nullptr);
+		vkDestroyBuffer(m_device, stagingBuffer.buffer, nullptr);
+
+		stbi_image_free(image);
+
+		return textureObject;
+
+	}
+
+	void ModelApp::setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const
+	{
+		VkImageMemoryBarrier imageMemoryBarrier{};
+		imageMemoryBarrier.sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER;
+		imageMemoryBarrier.oldLayout = oldLayout;
+		imageMemoryBarrier.newLayout = newLayout;
+		imageMemoryBarrier.srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED;
+		imageMemoryBarrier.subresourceRange = { VK_IMAGE_ASPECT_COLOR_BIT,0,1,0,1 };
+		imageMemoryBarrier.image = image;
+
+		VkPipelineStageFlags srcStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+		VkPipelineStageFlags dstStageFlags = VK_PIPELINE_STAGE_ALL_COMMANDS_BIT;
+
+		switch (oldLayout)
+		{
+		case VK_IMAGE_LAYOUT_UNDEFINED:
+			imageMemoryBarrier.srcAccessMask = 0;
+			break;
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			imageMemoryBarrier.srcAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			srcStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			break;
+		}
+
+		switch (newLayout)
+		{
+		case VK_IMAGE_LAYOUT_TRANSFER_SRC_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_READ_BIT;
+			dstStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+			break;
+		case VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT;
+			dstStageFlags = VK_PIPELINE_STAGE_TRANSFER_BIT;
+		case VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL:
+			imageMemoryBarrier.dstAccessMask = VK_ACCESS_SHADER_READ_BIT;
+			dstStageFlags = VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT;
+			break;
+		}
+
+		vkCmdPipelineBarrier
+		(
+			commandBuffer,
+			srcStageFlags,
+			dstStageFlags,
+			0,
+			0,
+			nullptr,
+			0,
+			nullptr,
+			1,
+			&imageMemoryBarrier
+		);
 
 	}
 }
