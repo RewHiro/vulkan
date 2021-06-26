@@ -19,7 +19,7 @@ public:
 	virtual std::shared_ptr<std::istream> GetInputStream(const std::string& filename) const override
 	{
 		auto streamPath = m_pathBase / std::experimental::filesystem::u8path(filename);
-		auto stream = std::make_shared<std::istream>(streamPath, std::ios_base::binary);
+		auto stream = std::make_shared<std::ifstream>(streamPath, std::ios_base::binary);
 		if (!stream || !(*stream))
 		{
 			throw std::runtime_error("Unable to create valid input stream.");
