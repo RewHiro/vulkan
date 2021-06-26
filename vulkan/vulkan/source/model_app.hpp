@@ -78,13 +78,32 @@ namespace app
 
 		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags, const void* initialData = nullptr) const;
 		TextureObject createTextureFromMemory(const std::vector<char>& imageData)const;
+		VkSampler createSampler()const;
 
 		void setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
+		VkPipelineShaderStageCreateInfo loadShaderModule(std::string_view fileName, VkShaderStageFlagBits stage);
+
 		void prepareUniformBuffers();
+		void prepareDescriptorSetLayout();
+		void prepareDescriptorPool();
+		void prepareDescriptorSet();
+
 
 		Model m_model{};
 
 		std::vector<BufferObject> m_uniformBuffers;
+
+		VkDescriptorSetLayout m_descriptorSetLayout = 0ull;
+		VkDescriptorPool m_descriptorPool = 0ull;
+
+		VkSampler m_sampler = 0ull;
+
+		std::vector<VkDescriptorSet> m_descriptorSet;
+		TextureObject m_textureObject{};
+
+		VkPipelineLayout m_pipelineLayout = 0ull;
+		VkPipeline m_pipelineOpaque = 0ull;
+		VkPipeline m_pipelineAlpha = 0ull;
 	};
 }
