@@ -120,8 +120,8 @@ namespace app
 
 			std::vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos
 			{
-				loadShaderModule("source/cube.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
-				loadShaderModule("source/cube.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
+				loadShaderModule("source/model.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
+				loadShaderModule("source/opaque.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
 			};
 
 			VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
@@ -170,13 +170,13 @@ namespace app
 			pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
 			pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
 			pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS_OR_EQUAL;
-			pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+			pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_FALSE;
 			pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
 
 			std::vector<VkPipelineShaderStageCreateInfo> pipelineShaderStageCreateInfos
 			{
-				loadShaderModule("source/cube.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
-				loadShaderModule("source/cube.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
+				loadShaderModule("source/model.vert.spv", VK_SHADER_STAGE_VERTEX_BIT),
+				loadShaderModule("source/alpha.frag.spv", VK_SHADER_STAGE_FRAGMENT_BIT)
 			};
 
 			VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo{};
