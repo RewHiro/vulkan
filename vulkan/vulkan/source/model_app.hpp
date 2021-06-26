@@ -61,6 +61,13 @@ namespace app
 			std::vector<Material> materials;
 		};
 
+		struct UniformParameters
+		{
+			glm::mat4 matrixWorld;
+			glm::mat4 matrixView;
+			glm::mat4 matrixProjection;
+		};
+
 		ModelApp() : VulkanAppBase() {}
 
 		virtual void prepare() override;
@@ -69,11 +76,15 @@ namespace app
 		void makeModelGeometry(const Microsoft::glTF::Document&, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader);
 		void makeModelMaterial(const Microsoft::glTF::Document&, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader);
 
-		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags, const void* initialData) const;
+		BufferObject createBuffer(uint32_t size, VkBufferUsageFlags bufferUsageFlags, VkMemoryPropertyFlags flags, const void* initialData = nullptr) const;
 		TextureObject createTextureFromMemory(const std::vector<char>& imageData)const;
 
 		void setImageMemoryBarrier(VkCommandBuffer commandBuffer, VkImage image, VkImageLayout oldLayout, VkImageLayout newLayout) const;
 
+		void prepareUniformBuffers();
+
 		Model m_model{};
+
+		std::vector<BufferObject> m_uniformBuffers;
 	};
 }

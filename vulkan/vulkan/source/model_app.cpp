@@ -22,6 +22,8 @@ namespace app
 
 		makeModelGeometry( document, glbResourceReader);
 		makeModelMaterial(document, glbResourceReader);
+
+		prepareUniformBuffers();
 	}
 
 	void ModelApp::makeModelGeometry(const Microsoft::glTF::Document& document, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader)
@@ -291,5 +293,15 @@ namespace app
 			&imageMemoryBarrier
 		);
 
+	}
+
+	void ModelApp::prepareUniformBuffers()
+	{
+		m_uniformBuffers.resize(m_swapchainImageViews.size());
+		for (auto& uniformBuffer : m_uniformBuffers)
+		{
+			VkMemoryPropertyFlags flags = VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT;
+			uniformBuffer = createBuffer(sizeof(UniformParameters), VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT, flags);
+		}
 	}
 }
