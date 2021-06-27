@@ -577,51 +577,58 @@ namespace app
 			descriptorSetLayouts.push_back(m_descriptorSetLayout);
 		}
 
-		VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
-		descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
-		descriptorSetAllocateInfo.descriptorPool = m_descriptorPool;
-		descriptorSetAllocateInfo.descriptorSetCount = m_swapchainImageViews.size();
-		descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
-
-		m_descriptorSet.resize(m_swapchainImageViews.size());
-		vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, m_descriptorSet.data());
-
-		for (auto i = 0u; i < m_swapchainImageViews.size(); i++)
+		for (auto&& mesh : m_model.meshes)
 		{
-			VkDescriptorBufferInfo descriptorBufferInfo{};
-			descriptorBufferInfo.buffer = m_uniformBuffers[i].buffer;
+			VkDescriptorSetAllocateInfo descriptorSetAllocateInfo{};
+			descriptorSetAllocateInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO;
+			descriptorSetAllocateInfo.descriptorPool = m_descriptorPool;
+			descriptorSetAllocateInfo.descriptorSetCount = m_swapchainImageViews.size();
+			descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
-			//TODO:m_uniformBuffers分のサイズで十分か試す
-			descriptorBufferInfo.range = VK_WHOLE_SIZE;
+			m_descriptorSet.resize(m_swapchainImageViews.size());
+			vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, m_descriptorSet.data());
 
-			VkDescriptorImageInfo descriptorImageInfo{};
-			descriptorImageInfo.imageView = m_textureObject.imageView;
-			descriptorImageInfo.sampler = m_sampler;
-			descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+			auto material = m_model.materials[mesh.materialIndex];
 
-			VkWriteDescriptorSet uniformBufferWriteDescriptorSet{};
-			uniformBufferWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			uniformBufferWriteDescriptorSet.dstBinding = 0;
-			uniformBufferWriteDescriptorSet.descriptorCount = 1;
-			uniformBufferWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
-			uniformBufferWriteDescriptorSet.pBufferInfo = &descriptorBufferInfo;
-			uniformBufferWriteDescriptorSet.dstSet = m_descriptorSet[i];
-
-			VkWriteDescriptorSet textureWriteDescriptorSet{};
-			textureWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
-			textureWriteDescriptorSet.dstBinding = 1;
-			textureWriteDescriptorSet.descriptorCount = 1;
-			textureWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
-			textureWriteDescriptorSet.pImageInfo = &descriptorImageInfo;
-			textureWriteDescriptorSet.dstSet = m_descriptorSet[i];
-
-			std::vector<VkWriteDescriptorSet> writeDescriptorSets =
+			for (auto i = 0u; i < m_swapchainImageViews.size(); i++)
 			{
-				uniformBufferWriteDescriptorSet,
-				textureWriteDescriptorSet,
-			};
-			vkUpdateDescriptorSets(m_device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
+				VkDescriptorBufferInfo descriptorBufferInfo{};
+				descriptorBufferInfo.buffer = m_uniformBuffers[i].buffer;
+
+				//TODO:m_uniformBuffers分のサイズで十分か試す
+				descriptorBufferInfo.range = VK_WHOLE_SIZE;
+
+				VkDescriptorImageInfo descriptorImageInfo{};
+				descriptorImageInfo.imageView = material.texture.imageView;
+				descriptorImageInfo.sampler = m_sampler;
+				descriptorImageInfo.imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL;
+
+				VkWriteDescriptorSet uniformBufferWriteDescriptorSet{};
+				uniformBufferWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				uniformBufferWriteDescriptorSet.dstBinding = 0;
+				uniformBufferWriteDescriptorSet.descriptorCount = 1;
+				uniformBufferWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
+				uniformBufferWriteDescriptorSet.pBufferInfo = &descriptorBufferInfo;
+				uniformBufferWriteDescriptorSet.dstSet = m_descriptorSet[i];
+
+				VkWriteDescriptorSet textureWriteDescriptorSet{};
+				textureWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
+				textureWriteDescriptorSet.dstBinding = 1;
+				textureWriteDescriptorSet.descriptorCount = 1;
+				textureWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
+				textureWriteDescriptorSet.pImageInfo = &descriptorImageInfo;
+				textureWriteDescriptorSet.dstSet = m_descriptorSet[i];
+
+				std::vector<VkWriteDescriptorSet> writeDescriptorSets =
+				{
+					uniformBufferWriteDescriptorSet,
+					textureWriteDescriptorSet,
+				};
+				vkUpdateDescriptorSets(m_device, writeDescriptorSets.size(), writeDescriptorSets.data(), 0, nullptr);
+			}
 		}
+
+
 
 	}
 }
