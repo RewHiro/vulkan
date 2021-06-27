@@ -562,7 +562,7 @@ namespace app
 
 		VkDescriptorPoolCreateInfo createInfo{};
 		createInfo.sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO;
-		createInfo.maxSets = m_swapchainImageViews.size();
+		createInfo.maxSets = m_swapchainImageViews.size() * m_model.meshes.size();
 		createInfo.poolSizeCount = descriptorPoolSize.size();
 		createInfo.pPoolSizes = descriptorPoolSize.data();
 		vkCreateDescriptorPool(m_device, &createInfo, nullptr, &m_descriptorPool);
