@@ -71,6 +71,7 @@ namespace app
 		ModelApp() : VulkanAppBase() {}
 
 		virtual void prepare() override;
+		virtual void cleanup() override;
 		virtual void makeCommand(VkCommandBuffer command) override;
 
 	private:
@@ -101,7 +102,6 @@ namespace app
 		VkSampler m_sampler = 0ull;
 
 		std::vector<VkDescriptorSet> m_descriptorSet;
-		TextureObject m_textureObject{};
 
 		VkPipelineLayout m_pipelineLayout = 0ull;
 		VkPipeline m_pipelineOpaque = 0ull;

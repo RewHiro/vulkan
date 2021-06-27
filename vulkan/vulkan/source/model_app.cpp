@@ -205,6 +205,42 @@ namespace app
 		}
 	}
 
+	void ModelApp::cleanup()
+	{
+		for (auto& uniformBuffer : m_uniformBuffers)
+		{
+			vkDestroyBuffer(m_device, uniformBuffer.buffer, nullptr);
+			vkFreeMemory(m_device, uniformBuffer.deviceMemory, nullptr);
+		}
+
+		vkDestroySampler(m_device, m_sampler, nullptr);
+
+		vkDestroyPipelineLayout(m_device, m_pipelineLayout, nullptr);
+
+		vkDestroyPipeline(m_device, m_pipelineOpaque, nullptr);
+		vkDestroyPipeline(m_device, m_pipelineAlpha, nullptr);
+
+		for (auto&& mesh : m_model.meshes)
+		{
+			vkFreeMemory(m_device, mesh.vertexBuffer.deviceMemory, nullptr);
+			vkFreeMemory(m_device, mesh.indexBuffer.deviceMemory, nullptr);
+			vkDestroyBuffer(m_device, mesh.vertexBuffer.buffer, nullptr);
+			vkDestroyBuffer(m_device, mesh.indexBuffer.buffer, nullptr);
+			mesh.descriptorSets.clear();
+		}
+
+		for (auto&& material : m_model.materials)
+		{
+			vkFreeMemory(m_device, material.texture.deviceMemory, nullptr);
+			vkDestroyImage(m_device, material.texture.image, nullptr);
+			vkDestroyImageView(m_device, material.texture.imageView, nullptr);
+		}
+
+		vkDestroyDescriptorPool(m_device, m_descriptorPool, nullptr);
+		vkDestroyDescriptorSetLayout(m_device, m_descriptorSetLayout, nullptr);
+
+	}
+
 	void ModelApp::makeCommand(VkCommandBuffer command)
 	{
 		using namespace Microsoft::glTF;
