@@ -101,8 +101,6 @@ namespace app
 
 		VkSampler m_sampler = 0ull;
 
-		std::vector<VkDescriptorSet> m_descriptorSet;
-
 		VkPipelineLayout m_pipelineLayout = 0ull;
 		VkPipeline m_pipelineOpaque = 0ull;
 		VkPipeline m_pipelineAlpha = 0ull;

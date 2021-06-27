@@ -10,7 +10,7 @@ namespace app
 {
 	void ModelApp::prepare()
 	{
-		auto modelFilePath = std::filesystem::path("alicia-solid.vrm");
+		auto modelFilePath = std::filesystem::path("source/alicia-solid.vrm");
 		if (modelFilePath.is_relative())
 		{
 			auto current = std::filesystem::current_path();
@@ -247,9 +247,9 @@ namespace app
 
 		UniformParameters uniformParameters{};
 
-		uniformParameters.matrixWorld = glm::rotate(glm::identity<glm::mat4>(), glm::radians(45.0f), glm::vec3(0, 1, 0));
-		uniformParameters.matrixView = glm::lookAtRH(glm::vec3(0.0f, 3.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
-		uniformParameters.matrixProjection = glm::perspective(glm::radians(60.0f), 640.0f / 480, 0.01f, 100.0f);
+		uniformParameters.matrixWorld = glm::identity<glm::mat4>();
+		uniformParameters.matrixView = glm::lookAtRH(glm::vec3(0.0f, 1.5f, -1.0f), glm::vec3(0.0f, 1.25f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		uniformParameters.matrixProjection = glm::perspective(glm::radians(45.0f), 640.0f / 480, 0.01f, 100.0f);
 
 		{
 			auto memory = m_uniformBuffers[m_imageIndex].deviceMemory;
@@ -357,12 +357,12 @@ namespace app
 
 	void ModelApp::makeModelMaterial(const Microsoft::glTF::Document& document, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader)
 	{
-		for (auto&& material : document.materials.Elements())
+		for (auto&& materialElement : document.materials.Elements())
 		{
-			auto textureId = material.metallicRoughness.baseColorTexture.textureId;
+			auto textureId = materialElement.metallicRoughness.baseColorTexture.textureId;
 			if (textureId.empty())
 			{
-				textureId = material.normalTexture.textureId;
+				textureId = materialElement.normalTexture.textureId;
 			}
 
 			auto& texture = document.textures.Get(textureId);
@@ -371,7 +371,7 @@ namespace app
 			auto imageData = reader->ReadBinaryData<char>(document, imageBufferView);
 
 			Material material{};
-			material.alphaMode = material.alphaMode;
+			material.alphaMode = materialElement.alphaMode;
 			material.texture = createTextureFromMemory(imageData);
 			m_model.materials.push_back(std::move(material));
 		}
@@ -678,8 +678,8 @@ namespace app
 			descriptorSetAllocateInfo.descriptorSetCount = m_swapchainImageViews.size();
 			descriptorSetAllocateInfo.pSetLayouts = descriptorSetLayouts.data();
 
-			m_descriptorSet.resize(m_swapchainImageViews.size());
-			vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, m_descriptorSet.data());
+			mesh.descriptorSets.resize(m_swapchainImageViews.size());
+			vkAllocateDescriptorSets(m_device, &descriptorSetAllocateInfo, mesh.descriptorSets.data());
 
 			auto material = m_model.materials[mesh.materialIndex];
 
@@ -702,7 +702,7 @@ namespace app
 				uniformBufferWriteDescriptorSet.descriptorCount = 1;
 				uniformBufferWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER;
 				uniformBufferWriteDescriptorSet.pBufferInfo = &descriptorBufferInfo;
-				uniformBufferWriteDescriptorSet.dstSet = m_descriptorSet[i];
+				uniformBufferWriteDescriptorSet.dstSet = mesh.descriptorSets[i];
 
 				VkWriteDescriptorSet textureWriteDescriptorSet{};
 				textureWriteDescriptorSet.sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET;
@@ -710,7 +710,7 @@ namespace app
 				textureWriteDescriptorSet.descriptorCount = 1;
 				textureWriteDescriptorSet.descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER;
 				textureWriteDescriptorSet.pImageInfo = &descriptorImageInfo;
-				textureWriteDescriptorSet.dstSet = m_descriptorSet[i];
+				textureWriteDescriptorSet.dstSet = mesh.descriptorSets[i];
 
 				std::vector<VkWriteDescriptorSet> writeDescriptorSets =
 				{
