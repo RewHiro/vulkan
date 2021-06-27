@@ -71,6 +71,7 @@ namespace app
 		ModelApp() : VulkanAppBase() {}
 
 		virtual void prepare() override;
+		virtual void makeCommand(VkCommandBuffer command) override;
 
 	private:
 		void makeModelGeometry(const Microsoft::glTF::Document&, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader);

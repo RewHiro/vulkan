@@ -1,7 +1,10 @@
 #include "model_app.hpp"
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "stream_reader.hpp"
 #include "stb_image.h"
+
 
 namespace app
 {
@@ -200,6 +203,60 @@ namespace app
 				vkDestroyShaderModule(m_device, shaderStage.module, nullptr);
 			}
 		}
+	}
+
+	void ModelApp::makeCommand(VkCommandBuffer command)
+	{
+		using namespace Microsoft::glTF;
+
+		UniformParameters uniformParameters{};
+
+		uniformParameters.matrixWorld = glm::rotate(glm::identity<glm::mat4>(), glm::radians(45.0f), glm::vec3(0, 1, 0));
+		uniformParameters.matrixView = glm::lookAtRH(glm::vec3(0.0f, 3.0f, 5.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+		uniformParameters.matrixProjection = glm::perspective(glm::radians(60.0f), 640.0f / 480, 0.01f, 100.0f);
+
+		{
+			auto memory = m_uniformBuffers[m_imageIndex].deviceMemory;
+			void* data = nullptr;
+			vkMapMemory(m_device, memory, 0, VK_WHOLE_SIZE, 0, &data);
+			memcpy(data, &uniformParameters, sizeof(UniformParameters));
+			vkUnmapMemory(m_device, memory);
+		}
+
+		for (auto&& mode : { ALPHA_OPAQUE, ALPHA_MASK, ALPHA_BLEND })
+		{
+			for (auto&& mesh : m_model.meshes)
+			{
+				if (m_model.materials[mesh.materialIndex].alphaMode != mode)
+				{
+					continue;
+				}
+
+				switch (mode)
+				{
+				case ALPHA_OPAQUE:
+				case ALPHA_MASK:
+					vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineOpaque);
+					break;
+				case ALPHA_BLEND:
+					vkCmdBindPipeline(command, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineAlpha);
+					break;
+				}
+
+				VkDeviceSize offset = 0;
+				vkCmdBindVertexBuffers(command, 0, 1, &mesh.vertexBuffer.buffer, &offset);
+				vkCmdBindIndexBuffer(command, mesh.indexBuffer.buffer, offset, VK_INDEX_TYPE_UINT32);
+
+				std::array<VkDescriptorSet, 1> descriptorSets =
+				{
+					mesh.descriptorSets[m_imageIndex]
+				};
+				vkCmdBindDescriptorSets(command, VK_PIPELINE_BIND_POINT_GRAPHICS, m_pipelineLayout, 0, 1, descriptorSets.data(), 0, nullptr);
+
+				vkCmdDrawIndexed(command, mesh.indexCount, 1, 0, 0, 0);
+			}
+		}
+
 	}
 
 	void ModelApp::makeModelGeometry(const Microsoft::glTF::Document& document, std::shared_ptr<Microsoft::glTF::GLTFResourceReader> reader)
